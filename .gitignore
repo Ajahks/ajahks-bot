@@ -1,0 +1,6 @@
+config/discord/*
+config/groq/*
+dist/
+build/
+node_modules/
+src/context/background.ts
