@@ -4,10 +4,12 @@ import { API_KEY } from '../config/groq/config.json'
 import { BACKGROUND_CONTEXT } from './context/background';
 import { Groq } from 'groq-sdk'
 import {getDotaLastMatchesSummary, getLastDotaMatchData} from "./dota/openDotaApiCaller";
+import {ChatMessageFixedQueue} from "./persistence/chatMessageFixedQueue";
+import {ChatMessage} from "./persistence/types/chatMessage";
 
 const initialPrompt = `You are roleplaying as Ajahks, otherwise known as Arren or AJ in real life.`
 
-let lastMessageHistory: string = "";
+const lastMessageHistory: ChatMessageFixedQueue = new ChatMessageFixedQueue(20);
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
@@ -30,7 +32,18 @@ client.on(Events.MessageCreate, async (message) => {
 
         generateResponse(message.author.username, message.content, requestContext).then(response => {
             if (response != null) {
-                lastMessageHistory += `${message.author.username}: ${message.content}\n"Ajahks": ${response}\n`
+                const receivedMessage: ChatMessage = {
+                    userId: message.author.username,
+                    userName: message.author.displayName,
+                    message: message.content,
+                }
+                const responseMessage: ChatMessage = {
+                    userId: client.user!.id,
+                    userName: '"Ajahks"',
+                    message: response,
+                }
+                lastMessageHistory.enqueue(receivedMessage)
+                lastMessageHistory.enqueue(responseMessage)
                 message.channel.send(response)
             }
         });
@@ -75,7 +88,7 @@ async function generateResponse(user: string, message: string, requestContext: s
 
             Here is the last known message history of your conversations so far with the chat for extra context (format of USERNAME: MESSAGE):
             #### BEGIN message history for context
-            ${lastMessageHistory}
+            ${lastMessageHistory.toFormattedString()}
             
             #### END message history for context
 
