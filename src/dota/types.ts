@@ -4,6 +4,7 @@ export enum Team {
 }
 
 export enum GameCloseness {
+    UNKNOWN = "unknown",
     CLOSE = "close game",
     STOMP_LOSS = "stomp loss",
     STOMP_WIN = "stomp win",

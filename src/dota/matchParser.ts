@@ -49,7 +49,7 @@ export function parseRawPlayerMatchDataAndRawPlayerData(playerMatchData: OpenDot
         skill: playerMatchData.skill,
         radiantScore: matchData.radiant_score,
         direScore: matchData.dire_score,
-        gameCloseness: determineGameCloseness(team, didWin, matchData.radiant_gold_adv)
+        gameCloseness: determineGameCloseness(team, didWin, matchData.radiant_gold_adv, playerMatchData.duration)
     }
 }
 
@@ -70,7 +70,15 @@ function convertHeroIdToString(heroId: number): string {
     return heroes[heroKey]["localized_name"]
 }
 
-function determineGameCloseness(team: Team, didWin: boolean, radiantGoldAdvantage: number[]): GameCloseness {
+function determineGameCloseness(team: Team, didWin: boolean, radiantGoldAdvantage: number[] | null, duration: number): GameCloseness {
+    if (radiantGoldAdvantage == null || radiantGoldAdvantage.length == 0) {
+        return GameCloseness.UNKNOWN
+    }
+
+    // 15K GOLD difference in an average of 30 min game is the threshold
+    // Threshold lowers when game is less than 30m, and increases when higher than 30 mins
+    const closenessThreshold = 15000 * (duration / 1800)
+
     const goldAdvantage = radiantGoldAdvantage.map((advantage: number) => {
         if (team == Team.Dire) {
             return advantage * -1
@@ -81,19 +89,19 @@ function determineGameCloseness(team: Team, didWin: boolean, radiantGoldAdvantag
     const maxDisadvantage = Math.min(...goldAdvantage) * -1;
     const maxAdvantage = Math.max(...goldAdvantage);
 
-    if (maxDisadvantage > 15000 && didWin) {
+    if (maxDisadvantage > closenessThreshold && didWin) {
         return GameCloseness.COMEBACK;
     }
 
-    if (maxAdvantage > 15000 && !didWin) {
+    if (maxAdvantage > closenessThreshold && !didWin) {
         return GameCloseness.THROW;
     }
 
-    if (maxAdvantage > 15000 && didWin) {
+    if (maxAdvantage > closenessThreshold && didWin) {
         return GameCloseness.STOMP_WIN
     }
 
-    if (maxDisadvantage > 15000 && !didWin) {
+    if (maxDisadvantage > closenessThreshold && !didWin) {
         return GameCloseness.STOMP_LOSS
     }
 
