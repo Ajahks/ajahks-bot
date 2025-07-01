@@ -7,7 +7,6 @@ export class OllamaEmbedder {
     private ollamaInstance: Ollama;
 
     constructor(ollamaInstance: Ollama) {
-        // initiate the chat bot
         this.ollamaInstance = ollamaInstance
     }
 
