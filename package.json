@@ -4,7 +4,11 @@
   "description": "A data collector using discordjs to pull messages to feed into a llm",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "clean": "rm -r ./dist",
+    "build": "npm run copy-data && npm run build-app",
+    "build-app": "npx tsc",
+    "copy-data": "mkdir dist && cp -r ./data ./dist/data",
+    "start": "node ./dist/app.js"
   },
   "author": "Arren De Manuel",
   "license": "ISC",
