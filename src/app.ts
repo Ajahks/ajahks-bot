@@ -6,6 +6,11 @@ import { Groq } from 'groq-sdk'
 import {getDotaLastMatchesSummary, getLastDotaMatchData} from "./dota/openDotaApiCaller";
 import {ChatMessageFixedQueue} from "./persistence/chatMessageFixedQueue";
 import {ChatMessage} from "./persistence/types/chatMessage";
+import {OllamaChatBot} from "./llm/ollamaChatBot";
+import {LocalOllama} from "./llm/localOllama";
+import {OllamaEmbedder} from "./llm/rag/ollamaEmbedder";
+import {VectorDB} from "./llm/rag/vectorDb";
+import {indexAllDotaKnowledge} from "./llm/rag/index/dotaKnowledgeIndexer";
 
 const initialPrompt = `You are roleplaying as Ajahks, otherwise known as Arren or AJ in real life.`
 
@@ -22,6 +27,18 @@ client.login(bot_token);
 const groq = new Groq({
     apiKey: API_KEY
 });
+
+const ollamaInstance = new LocalOllama();
+const embedder = new OllamaEmbedder(ollamaInstance.instance);
+const vectorDb = new VectorDB();
+const chatBot = new OllamaChatBot(ollamaInstance.instance, embedder, vectorDb);
+indexAllDotaKnowledge(embedder, vectorDb).then(() => {
+    // Chat with the bot after indexing is complete
+
+    // chatBot.chat("How do I counter a fed shadow fiend?").then(message => {
+    //     console.log(message.message.content)
+    // });
+})
 
 client.on(Events.MessageCreate, async (message) => {
     console.log(`Message found! ${message}`)
