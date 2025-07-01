@@ -4,10 +4,10 @@
   "description": "A data collector using discordjs to pull messages to feed into a llm",
   "main": "index.js",
   "scripts": {
-    "clean": "rm -r ./dist",
+    "clean": "rm -rf ./dist",
     "build": "npm run copy-data && npm run build-app",
     "build-app": "npx tsc",
-    "copy-data": "mkdir dist && cp -r ./data ./dist/data",
+    "copy-data": "mkdir -p dist && cp -r ./data ./dist/data",
     "start": "node ./dist/app.js"
   },
   "author": "Arren De Manuel",
