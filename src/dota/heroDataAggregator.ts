@@ -1,6 +1,3 @@
-
-// Generates a list of strings per each hero
-// Aggregates data for each hero from multiple sources, like ability stats, etc
 import {AbilityStats, HeroData, HeroStats} from "./data/HeroData";
 import {heroes, hero_abilities, abilities} from "dotaconstants";
 

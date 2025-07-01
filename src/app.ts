@@ -37,9 +37,9 @@ const chatBot = new OllamaChatBot(ollamaInstance.instance, embedder, vectorDb);
 indexAllDotaKnowledge(embedder, summarizer, vectorDb).then(() => {
     // Chat with the bot after indexing is complete
 
-    // chatBot.chat("How do I counter a fed shadow fiend?").then(message => {
-    //      console.log(message.message.content)
-    // });
+    chatBot.chat("Can you tell me about anti mage? any ideas on what good items are for them?").then(message => {
+         console.log(message.message.content)
+    });
 })
 
 client.on(Events.MessageCreate, async (message) => {

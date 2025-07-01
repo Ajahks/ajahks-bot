@@ -25,7 +25,7 @@ export class OllamaSummarizer {
         })
 
         const reasoningResponse = splitReasoningResponse(response.message.content)
-        console.log(`Summarized stats: ${reasoningResponse.message}`)
+        // console.log(`Summarized stats: ${reasoningResponse.message}`)
         return reasoningResponse.message
     }
 }
