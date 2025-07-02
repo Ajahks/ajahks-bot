@@ -30,7 +30,10 @@ export class VectorDB {
 
         // sort in descending order
         const sortedSimilarityList = similaritiesList.sort((a, b) => b.similarity - a.similarity);
-        return sortedSimilarityList.slice(0, topN).map((similarityData) => similarityData.vector)
+        return sortedSimilarityList.slice(0, topN).map((similarityData) => {
+            console.log(`Similarity Value: ${similarityData.similarity} for ${similarityData.vector.chunk}`)
+            return similarityData.vector
+        })
     }
 
     private cosineSimilarity(vector1: VectorData, vector2: VectorData): number {

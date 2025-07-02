@@ -12,8 +12,7 @@ import {OllamaEmbedder} from "./llm/rag/ollamaEmbedder";
 import {VectorDB} from "./llm/rag/vectorDb";
 import {indexAllDotaKnowledge} from "./llm/rag/index/dotaKnowledgeIndexer";
 import {OllamaSummarizer} from "./llm/rag/summarizer/ollamaSummarizer";
-
-const initialPrompt = `You are roleplaying as Ajahks, otherwise known as Arren or AJ in real life.`
+import {splitReasoningResponse} from "./llm/reasoningModelResponseUtils";
 
 const lastMessageHistory: ChatMessageFixedQueue = new ChatMessageFixedQueue(20);
 
@@ -23,11 +22,6 @@ client.once(Events.ClientReady, (readyClient) => {
     console.log(`Ready! Logged in as ${readyClient.user.tag}`);
 });
 
-client.login(bot_token);
-
-const groq = new Groq({
-    apiKey: API_KEY
-});
 
 const ollamaInstance = new LocalOllama();
 const embedder = new OllamaEmbedder(ollamaInstance.instance);
@@ -35,11 +29,7 @@ const summarizer = new OllamaSummarizer(ollamaInstance.instance);
 const vectorDb = new VectorDB();
 const chatBot = new OllamaChatBot(ollamaInstance.instance, embedder, vectorDb);
 indexAllDotaKnowledge(embedder, summarizer, vectorDb).then(() => {
-    // Chat with the bot after indexing is complete
-
-    chatBot.chat("Can you tell me about anti mage? any ideas on what good items are for them?").then(message => {
-         console.log(message.message.content)
-    });
+    client.login(bot_token);
 })
 
 client.on(Events.MessageCreate, async (message) => {
@@ -47,9 +37,7 @@ client.on(Events.MessageCreate, async (message) => {
     if (message.author.bot) return false;
 
     if (message.mentions.has(client.user!.id)) {
-        const requestContext = await generateHandledRequestContext(message);
-
-        generateResponse(message.author.username, message.content, requestContext).then(response => {
+        chatBot.chat(message).then(response => {
             if (response != null) {
                 const receivedMessage: ChatMessage = {
                     userId: message.author.username,
@@ -59,70 +47,12 @@ client.on(Events.MessageCreate, async (message) => {
                 const responseMessage: ChatMessage = {
                     userId: client.user!.id,
                     userName: '"Ajahks"',
-                    message: response,
+                    message: splitReasoningResponse(response.message.content).message,
                 }
                 lastMessageHistory.enqueue(receivedMessage)
                 lastMessageHistory.enqueue(responseMessage)
-                message.channel.send(response)
+                message.channel.send(responseMessage.message)
             }
         });
     }
 });
-
-async function generateHandledRequestContext(message: Message): Promise<string> {
-    let requestContext = ''
-    const messageContent = message.content.toLowerCase();
-    if (messageContent.indexOf('last matches') != -1 || messageContent.indexOf('last games') != -1) {
-        console.log('Found request for last matches')
-        const lastMatchesData = await getDotaLastMatchesSummary()
-        requestContext = `Last 10 dota matches data + ${JSON.stringify(lastMatchesData)}`
-        console.log(`Request Context: ${requestContext}`)
-    }
-    else if (messageContent.indexOf('last match') != -1 || messageContent.indexOf('last game') != -1) {
-        console.log('Found request for last match')
-        const lastMatchData = await getLastDotaMatchData()
-        requestContext = `Last dota match data + ${JSON.stringify(lastMatchData)}`
-        console.log(`Request Context: ${requestContext}`)
-    }
-
-    return requestContext
-}
-
-async function generateResponse(user: string, message: string, requestContext: string) {
-    const chatCompletion = await groq.chat.completions.create({
-        messages: [{ 
-            role: 'user', 
-            content: `${initialPrompt} 
-            Here is specific handled request data, this data is key for answering the above question:
-            #### BEGIN handled request data:
-            ${requestContext} 
-            
-            #### END handled request data
-            
-            Here is some background context:
-            #### BEGIN background context after this line:
-            ${BACKGROUND_CONTEXT}
-
-            #### END background context
-
-            Here is the last known message history of your conversations so far with the chat for extra context (format of USERNAME: MESSAGE):
-            #### BEGIN message history for context
-            ${lastMessageHistory.toFormattedString()}
-            
-            #### END message history for context
-
-            Here is the new prompt for you to answer:
-            #### BEGIN new message to respond to
-            ${user}: ${message}
-
-            #### END new message to respond to
-
-            Please respond to the above message as Ajahks! You dont have to format your response similar to above, just the message is good enough!  Please use the handled request data if there is some!
-            ` 
-        }],
-        model: 'llama3-8b-8192'
-    });
-
-    return chatCompletion.choices[0].message.content;
-}
-
