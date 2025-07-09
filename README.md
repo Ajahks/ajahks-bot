@@ -1,4 +1,14 @@
+## Building the Bot
+```
+npm run build
+```
+
+## Initializing the Knowledge Base
+```
+npm run init-db
+```
+
 ## Running the Bot
 ```
-npx ts-node src/app.ts
+npm run start
 ```

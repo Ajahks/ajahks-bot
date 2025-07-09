@@ -1,17 +1,11 @@
-import {Client, Events, GatewayIntentBits, Message} from 'discord.js';
+import {Client, Events, GatewayIntentBits} from 'discord.js';
 import { bot_token } from '../config/discord/config.json';
-import { API_KEY } from '../config/groq/config.json'
-import { BACKGROUND_CONTEXT } from './context/background';
-import { Groq } from 'groq-sdk'
-import {getDotaLastMatchesSummary, getLastDotaMatchData} from "./dota/openDotaApiCaller";
 import {ChatMessageFixedQueue} from "./persistence/chatMessageFixedQueue";
 import {ChatMessage} from "./persistence/types/chatMessage";
 import {OllamaChatBot} from "./llm/ollamaChatBot";
 import {LocalOllama} from "./llm/localOllama";
 import {OllamaEmbedder} from "./llm/rag/ollamaEmbedder";
 import {VectorDB} from "./llm/rag/vectorDb";
-import {indexAllDotaKnowledge} from "./llm/rag/index/dotaKnowledgeIndexer";
-import {OllamaSummarizer} from "./llm/rag/summarizer/ollamaSummarizer";
 import {splitReasoningResponse} from "./llm/reasoningModelResponseUtils";
 
 const lastMessageHistory: ChatMessageFixedQueue = new ChatMessageFixedQueue(20);
@@ -25,12 +19,11 @@ client.once(Events.ClientReady, (readyClient) => {
 
 const ollamaInstance = new LocalOllama();
 const embedder = new OllamaEmbedder(ollamaInstance.instance);
-const summarizer = new OllamaSummarizer(ollamaInstance.instance);
 const vectorDb = new VectorDB();
 const chatBot = new OllamaChatBot(ollamaInstance.instance, embedder, vectorDb);
-indexAllDotaKnowledge(embedder, summarizer, vectorDb).then(() => {
-    client.login(bot_token);
-})
+
+vectorDb.readDbFromDisk();
+client.login(bot_token);
 
 client.on(Events.MessageCreate, async (message) => {
     console.log(`Message found! ${message}`)

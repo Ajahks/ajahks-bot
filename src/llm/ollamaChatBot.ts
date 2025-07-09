@@ -42,7 +42,7 @@ export class OllamaChatBot {
 
     private async generateContext(message: Message, similarVectors: VectorData[]) {
         const retrievedContext = similarVectors.map((vectorData) => {
-            return vectorData.chunk
+            return "= Start Retrieved Knowledge Chunk =\n" + vectorData.chunk + "\n= End Received Knowledge Chunk =\n"
         }).reduce((prev, next) => {
             return `${prev}\n${next}`
         });

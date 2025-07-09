@@ -6,12 +6,13 @@ import {items} from "dotaconstants"
 import patchDetails from "dotaconstants/build/patchnotes.json";
 
 export async function indexAllDotaKnowledge(embedder: OllamaEmbedder, summarizer: OllamaSummarizer, vectorDb: VectorDB) {
-    // await indexDotaAbilityJson(embedder, summarizer, vectorDb);
     await indexDotaHeroData(embedder, summarizer, vectorDb);
     await indexDotaItemData(embedder, summarizer, vectorDb)
+    await indexLatestDotaPatches(embedder, summarizer, vectorDb);
 }
 
 export async function indexDotaHeroData(embedder: OllamaEmbedder, summarizer: OllamaSummarizer, vectorDb: VectorDB) {
+    console.log("Indexing Dota Hero Data...");
     const chunkedHeroes: string[] = [];
     const aggregatedHeroData = aggregateAllHeroData()
     for (const data of aggregatedHeroData) {
@@ -26,6 +27,7 @@ export async function indexDotaHeroData(embedder: OllamaEmbedder, summarizer: Ol
 }
 
 export async function indexDotaItemData(embedder: OllamaEmbedder, summarizer: OllamaSummarizer, vectorDb: VectorDB) {
+    console.log("Indexing Dota Item Data...");
     const chunkedItemsData: string[] = [];
 
     for (const [k, v] of Object.entries(items)) {
@@ -39,7 +41,8 @@ export async function indexDotaItemData(embedder: OllamaEmbedder, summarizer: Ol
     putChunkEmbeddingsToDb(chunkedItemsData, embeddings, vectorDb)
 }
 
-export async function indexLatestDotaPatch(embedder: OllamaEmbedder, summarizer: OllamaSummarizer, vectorDb: VectorDB) {
+export async function indexLatestDotaPatches(embedder: OllamaEmbedder, summarizer: OllamaSummarizer, vectorDb: VectorDB) {
+    console.log("Indexing top Dota Patch Notes...");
     const chunkedPatchNotes: string[] = [];
     const patchList = Object.keys(patchDetails).sort((a, b) => a < b ? 1 : -1 )
     const top3Patches = patchList.slice(0, 3)
@@ -50,7 +53,8 @@ export async function indexLatestDotaPatch(embedder: OllamaEmbedder, summarizer:
 
         chunkedPatchNotes.push(await summarizer.summarizeChunk(
             dataChunk,
-            "This is the JSON stringified patch notes for a Dota 2 including its item and ability changes."
+            "This is the JSON stringified patch notes for a Dota 2 including its item and ability changes. " +
+            "to summarize, reformat this to markdown without changing the underlying data."
         ));
     }
 

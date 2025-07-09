@@ -1,3 +1,5 @@
+import * as fs from "fs";
+
 export interface VectorData {
     chunk: string,
     embedding: number[],
@@ -8,6 +10,8 @@ interface SimilarityData {
     similarity: number,
 }
 
+const DISK_FILE_NAME = './data/vectordb.json';
+
 export class VectorDB {
     inMemoryVectors: VectorData[] = [];
 
@@ -17,6 +21,22 @@ export class VectorDB {
 
     resetVectorDb() {
         this.inMemoryVectors = [];
+    }
+
+    saveDbToDisk() {
+        console.log(`writing DB to file: ${DISK_FILE_NAME}`);
+        const json = JSON.stringify(this.inMemoryVectors, null, 2);
+        fs.writeFileSync(DISK_FILE_NAME, json, 'utf-8')
+    }
+
+    readDbFromDisk() {
+        console.log(`Reading DB from file: ${DISK_FILE_NAME}`);
+        try {
+            const data = fs.readFileSync(DISK_FILE_NAME, 'utf-8');
+            this.inMemoryVectors = JSON.parse(data);
+        } catch (error) {
+            console.log(`Failed to read file and populate db, please run \`npm run init-db\`: ${error}`)
+        }
     }
 
     retrieveSimilarVectors(inputVector: VectorData, topN: number): VectorData[] {
