@@ -23,7 +23,8 @@ export class OllamaChatBot {
                 embedding: messageEmbedding.embedding,
                 chunk: message.content,
             },
-            10
+            20,
+            0.63
         )
 
         const context = await this.generateContext(message, similarVectors)
@@ -41,11 +42,14 @@ export class OllamaChatBot {
     }
 
     private async generateContext(message: Message, similarVectors: VectorData[]) {
-        const retrievedContext = similarVectors.map((vectorData) => {
-            return "= Start Retrieved Knowledge Chunk =\n" + vectorData.chunk + "\n= End Received Knowledge Chunk =\n"
-        }).reduce((prev, next) => {
-            return `${prev}\n${next}`
-        });
+        let retrievedContext = "";
+        if (similarVectors.length > 0) {
+            retrievedContext = similarVectors.map((vectorData) => {
+                return "= Start Retrieved Knowledge Chunk =\n" + vectorData.chunk + "\n= End Received Knowledge Chunk =\n"
+            }).reduce((prev, next) => {
+                return `${prev}\n${next}`
+            });
+        }
 
         const generatedContext = await this.generateHandledRequestContext(message)
 

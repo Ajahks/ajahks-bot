@@ -51,7 +51,6 @@ export class VectorDB {
         // sort in descending order
         const sortedSimilarityList = similaritiesList.sort((a, b) => b.similarity - a.similarity);
         const topNSortedSimilarityList = sortedSimilarityList.slice(0, topN).map((similarityData) => {
-            console.log(`Similarity Value: ${similarityData.similarity} for ${similarityData.vector.chunk}`)
             return similarityData
         })
 
@@ -59,7 +58,7 @@ export class VectorDB {
             return topNSortedSimilarityList.map((similarityData) => similarityData.vector);
         }
         // find the min index where the similarity values start getting too large
-        let minIndex = 0;
+        let minIndex = topNSortedSimilarityList.length;
         for (let currIndex = 0; currIndex < topNSortedSimilarityList.length; currIndex++) {
             if (topNSortedSimilarityList[currIndex].similarity < minSimilarityValue) {
                 minIndex = currIndex;
@@ -67,7 +66,10 @@ export class VectorDB {
             }
         }
         // filter out the values under the min similarity value
-        return topNSortedSimilarityList.slice(minIndex).map((similarityData) => similarityData.vector);
+        return topNSortedSimilarityList.slice(0, minIndex).map((similarityData) => {
+            console.log(`\nSimilarity Value: ${similarityData.similarity} for ${similarityData.vector.chunk}`)
+            return similarityData.vector
+        });
     }
 
     private cosineSimilarity(vector1: VectorData, vector2: VectorData): number {
