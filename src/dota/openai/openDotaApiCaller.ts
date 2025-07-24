@@ -3,9 +3,9 @@ import {
 	DotaPlayerMatchDataSummary,
 	OpenDotaMatchRawData,
 	OpenDotaPlayerMatchRawData
-} from "./matchDataTypes";
-import {parseRawPlayerMatchData, parseRawPlayerMatchDataAndRawPlayerData} from "./matchParser";
-import {PLAYER_IDS_MAP} from "./openai/playerIds";
+} from "../matchDataTypes";
+import {parseRawPlayerMatchData, parseRawPlayerMatchDataAndRawPlayerData} from "../matchParser";
+import {PLAYER_IDS_MAP} from "../../context/steam/playerIds";
 
 export async function getDotaLastMatchesSummary(discordUsername: string): Promise<DotaPlayerMatchDataSummary[]> {
 	const steamId = PLAYER_IDS_MAP.get(discordUsername);

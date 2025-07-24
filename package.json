@@ -5,8 +5,11 @@
   "main": "index.js",
   "scripts": {
     "clean": "rm -rf ./dist",
-    "build": "npm run build-app",
+    "build": "npm run build-templates && npm run build-app",
     "build-app": "npx tsc",
+    "build-templates": "npm run build-steam-id-template && npm run build-background-template",
+    "build-steam-id-template": "sh -c '[ ! -e src/context/steam/playerIds.ts ] && cp ./src/context/steam/playerIds-template.ts ./src/context/steam/playerIds.ts || true'",
+    "build-background-template": "sh -c '[ ! -e ./src/context/background.ts ] && cp ./src/context/background-template.ts ./src/context/background.ts || true'",
     "copy-data": "mkdir -p dist && cp -r ./data ./dist/data",
     "start": "node ./dist/app.js",
     "init-db": "mkdir -p ./data && node ./dist/llm/rag/knowledgeBaseInitializer.js"

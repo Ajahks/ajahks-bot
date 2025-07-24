@@ -4,6 +4,6 @@ dist/
 build/
 node_modules/
 src/context/background.ts
-src/dota/openai/playerIds.ts
+src/context/steam/playerIds.ts
 .idea
 data/*

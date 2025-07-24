@@ -1,9 +1,9 @@
 import {Ollama} from "ollama";
-import {AI_NAME, BACKGROUND_CONTEXT} from "../context/background";
+import {AI_NAME, BACKGROUND_CONTEXT, INSTRUCTION_CONTEXT} from "../context/background";
 import {OllamaEmbedder} from "./rag/ollamaEmbedder";
 import {VectorData, VectorDB} from "./rag/vectorDb";
 import {Message} from "discord.js";
-import {getDotaLastMatchesSummary, getLastDotaMatchData} from "../dota/openDotaApiCaller";
+import {getDotaLastMatchesSummary, getLastDotaMatchData} from "../dota/openai/openDotaApiCaller";
 
 export class OllamaChatBot {
     private ollamaInstance: Ollama;
@@ -24,15 +24,18 @@ export class OllamaChatBot {
                 chunk: message.content,
             },
             10,
-            0.63
+            0.645
         )
 
         const context = await this.generateContext(message, similarVectors)
         const chatMessage: string = context +
+            "========== START INSTRUCTIONS ========== \n" +
+            INSTRUCTION_CONTEXT +
+            `\n Given the above context if needed please respond to the below message as ${AI_NAME} and always stay in character based on the this instruction context.  Limit response to under 2000 characters:\n` +
+            "========== END INSTRUCTIONS ========== \n" +
             "========== START ACTUAL MESSAGE TO BOT ========== \n" +
             message.author.username + ": " + message.cleanContent +
-            "\n========== END ACTUAL MESSAGE TO BOT ========== \n" +
-            `Given the above context if needed please respond to the above message as ${AI_NAME} and always stay in character based on the background context.  Limit response to under 2000 characters:\n`;
+            "\n========== END ACTUAL MESSAGE TO BOT ========== \n"
         console.log(chatMessage)
 
         return this.ollamaInstance.chat({
