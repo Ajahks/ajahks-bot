@@ -9,11 +9,12 @@
     "build-app": "npx tsc",
     "copy-data": "mkdir -p dist && cp -r ./data ./dist/data",
     "start": "node ./dist/app.js",
-    "init-db": "node ./dist/llm/rag/knowledgeBaseInitializer.js"
+    "init-db": "mkdir -p ./data && node ./dist/llm/rag/knowledgeBaseInitializer.js"
   },
   "author": "Arren De Manuel",
   "license": "ISC",
   "dependencies": {
+    "cli-spinner": "^0.2.10",
     "discord.js": "^14.15.3",
     "dotaconstants": "^9.5.0",
     "groq-sdk": "^0.5.0",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
+    "@types/cli-spinner": "^0.2.3",
     "eslint": "^9.17.0",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.18.2"

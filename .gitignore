@@ -4,5 +4,6 @@ dist/
 build/
 node_modules/
 src/context/background.ts
+src/dota/openai/playerIds.ts
 .idea
 data/*

@@ -1,7 +1,7 @@
 import {Client, Events, GatewayIntentBits} from 'discord.js';
 import { bot_token } from '../config/discord/config.json';
-import {ChatMessageFixedQueue} from "./persistence/chatMessageFixedQueue";
-import {ChatMessage} from "./persistence/types/chatMessage";
+import {ChatMessageFixedQueue} from "./llm/persistence/chatMessageFixedQueue";
+import {ChatMessage} from "./llm/persistence/types/chatMessage";
 import {OllamaChatBot} from "./llm/ollamaChatBot";
 import {LocalOllama} from "./llm/localOllama";
 import {OllamaEmbedder} from "./llm/rag/ollamaEmbedder";
@@ -39,7 +39,7 @@ client.on(Events.MessageCreate, async (message) => {
                 }
                 const responseMessage: ChatMessage = {
                     userId: client.user!.id,
-                    userName: '"Ajahks"',
+                    userName: 'Dotto',
                     message: splitReasoningResponse(response.message.content).message,
                 }
                 lastMessageHistory.enqueue(receivedMessage)

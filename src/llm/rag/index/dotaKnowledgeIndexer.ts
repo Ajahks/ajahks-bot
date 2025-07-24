@@ -4,6 +4,7 @@ import {OllamaSummarizer} from "../summarizer/ollamaSummarizer";
 import {aggregateAllHeroData} from "../../../dota/heroDataAggregator";
 import {items} from "dotaconstants"
 import patchDetails from "dotaconstants/build/patchnotes.json";
+import {Spinner} from 'cli-spinner';
 
 export async function indexAllDotaKnowledge(embedder: OllamaEmbedder, summarizer: OllamaSummarizer, vectorDb: VectorDB) {
     await indexDotaHeroData(embedder, summarizer, vectorDb);
@@ -12,7 +13,8 @@ export async function indexAllDotaKnowledge(embedder: OllamaEmbedder, summarizer
 }
 
 export async function indexDotaHeroData(embedder: OllamaEmbedder, summarizer: OllamaSummarizer, vectorDb: VectorDB) {
-    console.log("Indexing Dota Hero Data...");
+    const spinner = new Spinner("Indexing Dota Hero Data...");
+    spinner.start();
     const chunkedHeroes: string[] = [];
     const aggregatedHeroData = aggregateAllHeroData()
     for (const data of aggregatedHeroData) {
@@ -24,10 +26,12 @@ export async function indexDotaHeroData(embedder: OllamaEmbedder, summarizer: Ol
     }
     const embeddings = (await embedder.embedChunks(chunkedHeroes)).embeddings;
     putChunkEmbeddingsToDb(chunkedHeroes, embeddings, vectorDb)
+    spinner.stop()
 }
 
 export async function indexDotaItemData(embedder: OllamaEmbedder, summarizer: OllamaSummarizer, vectorDb: VectorDB) {
-    console.log("Indexing Dota Item Data...");
+    const spinner = new Spinner("Indexing Dota Item Data...");
+    spinner.start();
     const chunkedItemsData: string[] = [];
 
     for (const [k, v] of Object.entries(items)) {
@@ -39,10 +43,12 @@ export async function indexDotaItemData(embedder: OllamaEmbedder, summarizer: Ol
     }
     const embeddings = (await embedder.embedChunks(chunkedItemsData)).embeddings;
     putChunkEmbeddingsToDb(chunkedItemsData, embeddings, vectorDb)
+    spinner.stop()
 }
 
 export async function indexLatestDotaPatches(embedder: OllamaEmbedder, summarizer: OllamaSummarizer, vectorDb: VectorDB) {
-    console.log("Indexing top Dota Patch Notes...");
+    const spinner = new Spinner("Indexing top Dota Patch Notes...");
+    spinner.start();
     const chunkedPatchNotes: string[] = [];
     const patchList = Object.keys(patchDetails).sort((a, b) => a < b ? 1 : -1 )
     const top3Patches = patchList.slice(0, 3)
@@ -60,6 +66,7 @@ export async function indexLatestDotaPatches(embedder: OllamaEmbedder, summarize
 
     const embeddings = (await embedder.embedChunks(chunkedPatchNotes)).embeddings;
     putChunkEmbeddingsToDb(chunkedPatchNotes, embeddings, vectorDb)
+    spinner.stop();
 }
 
 function putChunkEmbeddingsToDb(chunks: string[], embeddings: number[][], vectorDb: VectorDB) {

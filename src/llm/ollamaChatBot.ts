@@ -1,5 +1,5 @@
 import {Ollama} from "ollama";
-import {BACKGROUND_CONTEXT} from "../context/background";
+import {AI_NAME, BACKGROUND_CONTEXT} from "../context/background";
 import {OllamaEmbedder} from "./rag/ollamaEmbedder";
 import {VectorData, VectorDB} from "./rag/vectorDb";
 import {Message} from "discord.js";
@@ -23,16 +23,16 @@ export class OllamaChatBot {
                 embedding: messageEmbedding.embedding,
                 chunk: message.content,
             },
-            20,
+            10,
             0.63
         )
 
         const context = await this.generateContext(message, similarVectors)
         const chatMessage: string = context +
             "========== START ACTUAL MESSAGE TO BOT ========== \n" +
-            message.content +
+            message.author.username + ": " + message.cleanContent +
             "\n========== END ACTUAL MESSAGE TO BOT ========== \n" +
-            "Given the above context if needed please respond to the above message as Ajahks in under 2000 characters: \n";
+            `Given the above context if needed please respond to the above message as ${AI_NAME} and always stay in character based on the background context.  Limit response to under 2000 characters:\n`;
         console.log(chatMessage)
 
         return this.ollamaInstance.chat({
@@ -72,14 +72,16 @@ export class OllamaChatBot {
         const messageContent = message.content.toLowerCase();
         if (messageContent.indexOf('last matches') != -1 || messageContent.indexOf('last games') != -1) {
             console.log('Found request for last matches')
-            const lastMatchesData = await getDotaLastMatchesSummary()
-            requestContext = `Last 10 dota matches data + ${JSON.stringify(lastMatchesData)}`
+            const lastMatchesData = await getDotaLastMatchesSummary(message.author.username)
+            if (lastMatchesData == null) { requestContext = "No match data found for discord user!" }
+            else { requestContext = `Last 10 dota matches data + ${JSON.stringify(lastMatchesData)}`  }
             console.log(`Request Context: ${requestContext}`)
         }
         else if (messageContent.indexOf('last match') != -1 || messageContent.indexOf('last game') != -1) {
             console.log('Found request for last match')
-            const lastMatchData = await getLastDotaMatchData()
-            requestContext = `Last dota match data + ${JSON.stringify(lastMatchData)}`
+            const lastMatchData = await getLastDotaMatchData(message.author.username)
+            if (lastMatchData == null) { requestContext = "No match data found for discord user!" }
+            else { requestContext = `Last dota match data + ${JSON.stringify(lastMatchData)}` }
             console.log(`Request Context: ${requestContext}`)
         }
 
