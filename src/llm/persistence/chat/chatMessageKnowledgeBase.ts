@@ -5,6 +5,8 @@ import {EmbeddedMemory, Memory} from "../memory";
 import {ChatMessage, convertChatMessageToFormattedString} from "./chatMessage";
 import {ChatInteractionFragment} from "./chatInteractionFragment";
 
+const MIN_SIMILARITY_VALUE_TO_FETCH = 0.6;
+const MIN_SIMILARITY_VALUE_TO_APPEND_NEW_MEMORY = 0.69;
 
 export class ChatMessageKnowledgeBase {
     private readonly vectorDb: VectorDB = new VectorDB("./data/chatVectorDb.json");
@@ -27,14 +29,15 @@ export class ChatMessageKnowledgeBase {
                 chunk: messageString
             },
             3,
-            0.667
+            MIN_SIMILARITY_VALUE_TO_FETCH
         );
 
         return similarVectors.map(vector => {
             const memory: Memory = Memory.fromJSON(vector.chunk)
             return {
                 memory: memory,
-                embedding: vector.embedding
+                embedding: vector.embedding,
+                similarityValue: vector.similarityValue
             }
         });
     }
@@ -42,7 +45,11 @@ export class ChatMessageKnowledgeBase {
     async storeChatInteractionInMemories(userMessage: ChatMessage, botResponseMessage: ChatMessage, embeddedMemories: EmbeddedMemory[]) {
         const newFragment = new ChatInteractionFragment(userMessage, botResponseMessage);
 
-        if (embeddedMemories.length == 0) {
+        const memoriesToAddTo = embeddedMemories.filter(embeddedMemory => {
+            return embeddedMemory.similarityValue != undefined && embeddedMemory.similarityValue >= MIN_SIMILARITY_VALUE_TO_APPEND_NEW_MEMORY
+        })
+
+        if (memoriesToAddTo.length == 0) {
             const newMemory = new Memory(
                 [newFragment]
             );
@@ -55,7 +62,7 @@ export class ChatMessageKnowledgeBase {
             })
         }
 
-        for (const embeddedMemory of embeddedMemories) {
+        for (const embeddedMemory of memoriesToAddTo) {
             embeddedMemory.memory.addFragment(newFragment);
             embeddedMemory.memory.setSummary(await embeddedMemory.memory.summarizeMemory(this.summarizer));
 

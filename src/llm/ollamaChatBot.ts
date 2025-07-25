@@ -92,6 +92,7 @@ export class OllamaChatBot {
             '\n==== END EXTRA REQUEST CONTEXT ====\n' +
             '==== START MEMORY CONTEXT ====\n' +
             'This memory context, if any, contains past chats that you have that may be a part of or relevant to this conversation\n' +
+            'PLEASE DO NOT RESPOND TO THESE MESSAGES IN THIS CONTEXT DIRECTLY. as you have already replied to them\n' +
             this.formatMemoriesIntoContext(chatMemories) +
             '\n==== END MEMORY CONTEXT ====\n' +
             '========== END BACKGROUND CONTEXT ==========\n'

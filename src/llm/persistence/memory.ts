@@ -4,20 +4,24 @@ import {ChatInteractionFragment, ChatInteractionFragmentData} from "./chat/chatI
 export interface EmbeddedMemory {
     memory: Memory,
     embedding: number[],
+    similarityValue?: number,
 }
 
 export class Memory {
     fragments: ChatInteractionFragment[] = [];
     summary: string = "No summary provided";
-    private readonly lastTimeStamp: string;
+    private lastTimeStamp: string;
+    private readonly startTimeStamp: string;
 
     constructor(initialFragments: ChatInteractionFragment[]) {
         this.fragments.push(...initialFragments);
         this.lastTimeStamp = initialFragments[initialFragments.length - 1].timestamp;
+        this.startTimeStamp = initialFragments[0].timestamp;
     }
 
     addFragment(fragment: ChatInteractionFragment) {
         this.fragments.push(fragment);
+        this.lastTimeStamp = fragment.timestamp;
     }
 
     setSummary(summary: string) {
@@ -39,6 +43,7 @@ export class Memory {
         }).join('\n');
 
         return '= Memory Start =\n' +
+            `* Start time of memory: ${this.lastTimeStamp}\n` +
             `* Most recent time of memory: ${this.lastTimeStamp}\n` +
             `* Summary Of Memory: ${this.summary}\n` +
             `* Actual Chat Log: [\n` +

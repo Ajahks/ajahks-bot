@@ -6,5 +6,5 @@ export interface ChatMessage {
 }
 
 export function convertChatMessageToFormattedString(chatMessage: ChatMessage): string {
-    return `[${chatMessage.timestamp}] ${chatMessage.userName}: ${chatMessage.message}`
+    return `[ ${chatMessage.userName} ]: ${chatMessage.message}`
 }

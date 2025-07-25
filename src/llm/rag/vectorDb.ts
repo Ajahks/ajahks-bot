@@ -3,6 +3,7 @@ import * as fs from "fs";
 export interface VectorData {
     chunk: string,
     embedding: number[],
+    similarityValue?: number,
 }
 
 interface SimilarityData {
@@ -83,7 +84,11 @@ export class VectorDB {
         // filter out the values under the min similarity value
         return topNSortedSimilarityList.slice(0, minIndex).map((similarityData) => {
             console.log(`\nSimilarity Value: ${similarityData.similarity} for ${similarityData.vector.chunk}`)
-            return similarityData.vector
+            return {
+                chunk: similarityData.vector.chunk,
+                embedding: similarityData.vector.embedding,
+                similarityValue: similarityData.similarity
+            }
         });
     }
 
