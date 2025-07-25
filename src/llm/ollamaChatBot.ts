@@ -3,7 +3,10 @@ import {AI_NAME, BACKGROUND_CONTEXT, INSTRUCTION_CONTEXT} from "../context/backg
 import {OllamaEmbedder} from "./rag/ollamaEmbedder";
 import {VectorDB} from "./rag/vectorDb";
 import {getDotaLastMatchesSummary, getLastDotaMatchData} from "../dota/openai/openDotaApiCaller";
-import {ChatMessageKnowledgeBase} from "./persistence/chat/chatMessageKnowledgeBase";
+import {
+    ChatMessageKnowledgeBase,
+    MIN_SIMILARITY_VALUE_TO_APPEND_NEW_MEMORY
+} from "./persistence/chat/chatMessageKnowledgeBase";
 import {OllamaSummarizer} from "./rag/summarizer/ollamaSummarizer";
 import {ChatMessage} from "./persistence/chat/chatMessage";
 import {EmbeddedMemory} from "./persistence/memory";
@@ -122,7 +125,12 @@ export class OllamaChatBot {
     private formatMemoriesIntoContext(embeddedMemories: EmbeddedMemory[]): string {
         if (embeddedMemories.length == 0) return ""
         return embeddedMemories.map((embeddedMemory: EmbeddedMemory) => {
-            return embeddedMemory.memory.toString()
+            if (embeddedMemory.similarityValue == undefined || embeddedMemory.similarityValue < MIN_SIMILARITY_VALUE_TO_APPEND_NEW_MEMORY) {
+                return embeddedMemory.memory.toSummarizedString()
+            }
+            else {
+                return embeddedMemory.memory.toString()
+            }
         }).join("\n");
     }
 }

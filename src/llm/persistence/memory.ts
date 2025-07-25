@@ -51,6 +51,13 @@ export class Memory {
             `= Memory End =\n`;
     }
 
+    toSummarizedString(): string {
+        return '= Memory Start =\n' +
+            `* Start time of memory: ${this.lastTimeStamp}\n` +
+            `* Summary Of Memory: ${this.summary}\n` +
+            `= Memory End =\n`;
+    }
+
     static fromJSON(json: string) {
         const parsedObject = JSON.parse(json);
         const parsedFragments: ChatInteractionFragment[] = parsedObject.fragments.map((fragment: ChatInteractionFragmentData) => {

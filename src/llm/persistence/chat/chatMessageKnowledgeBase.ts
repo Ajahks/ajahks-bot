@@ -5,8 +5,8 @@ import {EmbeddedMemory, Memory} from "../memory";
 import {ChatMessage, convertChatMessageToFormattedString} from "./chatMessage";
 import {ChatInteractionFragment} from "./chatInteractionFragment";
 
-const MIN_SIMILARITY_VALUE_TO_FETCH = 0.6;
-const MIN_SIMILARITY_VALUE_TO_APPEND_NEW_MEMORY = 0.69;
+export const MIN_SIMILARITY_VALUE_TO_FETCH = 0.6;
+export const MIN_SIMILARITY_VALUE_TO_APPEND_NEW_MEMORY = 0.69;
 
 export class ChatMessageKnowledgeBase {
     private readonly vectorDb: VectorDB = new VectorDB("./data/chatVectorDb.json");
