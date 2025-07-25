@@ -7,7 +7,7 @@ import {indexAllDotaKnowledge} from "./index/dotaKnowledgeIndexer";
 const ollamaInstance = new LocalOllama();
 const embedder = new OllamaEmbedder(ollamaInstance.instance);
 const summarizer = new OllamaSummarizer(ollamaInstance.instance);
-const vectorDb = new VectorDB();
+const vectorDb = new VectorDB("./data/vectordb.json");
 
 console.log("Indexing Dota Knowledge...")
 

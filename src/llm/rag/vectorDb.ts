@@ -10,40 +10,52 @@ interface SimilarityData {
     similarity: number,
 }
 
-const DISK_FILE_NAME = './data/vectordb.json';
-
 export class VectorDB {
-    inMemoryVectors: VectorData[] = [];
+    private readonly diskFilePath: string;
+    inMemoryVectors: Map<number[], VectorData> = new Map();
+
+    constructor(diskFilePath: string) {
+        this.diskFilePath = diskFilePath
+    }
 
     addVector(vector: VectorData) {
-        this.inMemoryVectors.push(vector);
+        this.inMemoryVectors.set(vector.embedding, vector)
+    }
+
+    removeEmbedding(embedding: number[]) {
+        this.inMemoryVectors.delete(embedding);
     }
 
     resetVectorDb() {
-        this.inMemoryVectors = [];
+        this.inMemoryVectors = new Map();
     }
 
     saveDbToDisk() {
-        console.log(`writing DB to file: ${DISK_FILE_NAME}`);
-        const json = JSON.stringify(this.inMemoryVectors, null, 2);
-        fs.writeFileSync(DISK_FILE_NAME, json, 'utf-8')
+        console.log(`writing DB to file: ${this.diskFilePath}`);
+        const vectors: VectorData[] = Array.from(this.inMemoryVectors.values());
+        const json = JSON.stringify(vectors, null, 2);
+        fs.writeFileSync(this.diskFilePath, json, 'utf-8')
     }
 
     readDbFromDisk() {
-        console.log(`Reading DB from file: ${DISK_FILE_NAME}`);
+        console.log(`Reading DB from file: ${this.diskFilePath}`);
         try {
-            const data = fs.readFileSync(DISK_FILE_NAME, 'utf-8');
-            this.inMemoryVectors = JSON.parse(data);
+            const data = fs.readFileSync(this.diskFilePath, 'utf-8');
+            const vectors: VectorData[] = JSON.parse(data);
+            vectors.forEach((vector: VectorData) => {
+                this.addVector(vector);
+            })
         } catch (error) {
-            console.log(`Failed to read file and populate db, please run \`npm run init-db\`: ${error}`)
+            console.log(`Failed to read file and populate db, please run \`npm run init-db\` or the db is not initialized yet: ${error}`)
         }
     }
 
     retrieveSimilarVectors(inputVector: VectorData, topN: number, minSimilarityValue?: number): VectorData[] {
-        const similaritiesList: SimilarityData[] = this.inMemoryVectors.map((knowledgeVector) => {
-            const similarity = this.cosineSimilarity(inputVector, knowledgeVector);
+        const embeddings = Array.from(this.inMemoryVectors.keys());
+        const similaritiesList: SimilarityData[] = embeddings.map((embedding: number[]) => {
+            const similarity = this.cosineSimilarity(inputVector.embedding, embedding);
             return {
-                vector: knowledgeVector,
+                vector: this.inMemoryVectors.get(embedding)!,
                 similarity: similarity
             }
         });
@@ -55,7 +67,10 @@ export class VectorDB {
         })
 
         if (minSimilarityValue == undefined) {
-            return topNSortedSimilarityList.map((similarityData) => similarityData.vector);
+            return topNSortedSimilarityList.map((similarityData) => {
+                console.log(`\nSimilarity Value: ${similarityData.similarity} for ${similarityData.vector.chunk}`)
+                return similarityData.vector
+            });
         }
         // find the min index where the similarity values start getting too large
         let minIndex = topNSortedSimilarityList.length;
@@ -72,10 +87,7 @@ export class VectorDB {
         });
     }
 
-    private cosineSimilarity(vector1: VectorData, vector2: VectorData): number {
-        const embedding1 = vector1.embedding;
-        const embedding2 = vector2.embedding;
-
+    private cosineSimilarity(embedding1: number[], embedding2: number[]): number {
         const dotProduct = embedding1.map((_, i) => {
             return embedding1[i] * embedding2[i];
         }).reduce((m, n) => m + n);

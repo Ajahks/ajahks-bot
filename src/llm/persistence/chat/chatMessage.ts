@@ -2,8 +2,9 @@ export interface ChatMessage {
     readonly userId: string;
     readonly userName: string;
     readonly message: string;
+    readonly timestamp: string
 }
 
 export function convertChatMessageToFormattedString(chatMessage: ChatMessage): string {
-    return `${chatMessage.userName}: ${chatMessage.message}`
+    return `[${chatMessage.timestamp}] ${chatMessage.userName}: ${chatMessage.message}`
 }

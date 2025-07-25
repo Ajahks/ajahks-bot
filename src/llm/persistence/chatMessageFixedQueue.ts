@@ -1,4 +1,4 @@
-import {ChatMessage, convertChatMessageToFormattedString} from "./types/chatMessage";
+import {ChatMessage, convertChatMessageToFormattedString} from "./chat/chatMessage";
 
 export class ChatMessageFixedQueue {
     private readonly maxMessages: number;

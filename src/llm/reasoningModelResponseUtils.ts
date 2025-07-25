@@ -7,7 +7,7 @@ export function splitReasoningResponse(response: string) {
     if (splitResponse.length > 1) {
         return {
             thoughts: splitResponse[0],
-            message: splitResponse[1]
+            message: splitResponse[1].trim()
         }
     } else {
         return {
