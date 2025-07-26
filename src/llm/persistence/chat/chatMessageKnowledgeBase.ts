@@ -5,8 +5,8 @@ import {EmbeddedMemory, Memory} from "../memory";
 import {ChatMessage, convertChatMessageToFormattedString} from "./chatMessage";
 import {ChatInteractionFragment} from "./chatInteractionFragment";
 
-export const MIN_SIMILARITY_VALUE_TO_FETCH = 0.6;
-export const MIN_SIMILARITY_VALUE_TO_APPEND_NEW_MEMORY = 0.69;
+export const MIN_SIMILARITY_VALUE_TO_FETCH = 0.65;
+export const MIN_SIMILARITY_VALUE_TO_APPEND_NEW_MEMORY = 0.75;
 
 export class ChatMessageKnowledgeBase {
     private readonly vectorDb: VectorDB = new VectorDB("./data/chatVectorDb.json");
@@ -28,7 +28,7 @@ export class ChatMessageKnowledgeBase {
                 embedding: chatEmbedding,
                 chunk: messageString
             },
-            3,
+            10,
             MIN_SIMILARITY_VALUE_TO_FETCH
         );
 
@@ -67,7 +67,7 @@ export class ChatMessageKnowledgeBase {
             embeddedMemory.memory.setSummary(await embeddedMemory.memory.summarizeMemory(this.summarizer));
 
             // generate new embedding for this memory
-            const newEmbedding = (await this.embedder.embedChunk(embeddedMemory.memory.toString())).embedding
+            const newEmbedding = (await this.embedder.embedChunk(embeddedMemory.memory.toSummarizedString())).embedding
 
             // delete old memory from the vectodb
             this.vectorDb.removeEmbedding(embeddedMemory.embedding)
