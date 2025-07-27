@@ -1,4 +1,4 @@
-import {ChatMessage, convertChatMessageToFormattedString} from "./chatMessage";
+import {ChatMessage, convertChatMessageToFormattedString} from "../../chat/chatMessage";
 
 export interface ChatInteractionFragmentData {
     timestamp: string;

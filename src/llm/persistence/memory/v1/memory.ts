@@ -1,5 +1,5 @@
-import {OllamaSummarizer} from "../rag/summarizer/ollamaSummarizer";
-import {ChatInteractionFragment, ChatInteractionFragmentData} from "./chat/chatInteractionFragment";
+import {OllamaSummarizer} from "../../../rag/summarizer/ollamaSummarizer";
+import {ChatInteractionFragment, ChatInteractionFragmentData} from "./chatInteractionFragment";
 
 export interface EmbeddedMemory {
     memory: Memory,

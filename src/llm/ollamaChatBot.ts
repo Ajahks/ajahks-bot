@@ -6,10 +6,10 @@ import {getDotaLastMatchesSummary, getLastDotaMatchData} from "../dota/openai/op
 import {
     ChatMessageKnowledgeBase,
     MIN_SIMILARITY_VALUE_TO_APPEND_NEW_MEMORY
-} from "./persistence/chat/chatMessageKnowledgeBase";
+} from "./persistence/memory/v1/chatMessageKnowledgeBase";
 import {OllamaSummarizer} from "./rag/summarizer/ollamaSummarizer";
 import {ChatMessage} from "./persistence/chat/chatMessage";
-import {EmbeddedMemory} from "./persistence/memory";
+import {EmbeddedMemory} from "./persistence/memory/v1/memory";
 import {splitReasoningResponse} from "./reasoningModelResponseUtils";
 
 export class OllamaChatBot {

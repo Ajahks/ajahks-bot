@@ -1,8 +1,8 @@
-import {VectorDB} from "../../rag/vectorDb";
-import {OllamaSummarizer} from "../../rag/summarizer/ollamaSummarizer";
-import {OllamaEmbedder} from "../../rag/ollamaEmbedder";
-import {EmbeddedMemory, Memory} from "../memory";
-import {ChatMessage, convertChatMessageToFormattedString} from "./chatMessage";
+import {VectorDB} from "../../../rag/vectorDb";
+import {OllamaSummarizer} from "../../../rag/summarizer/ollamaSummarizer";
+import {OllamaEmbedder} from "../../../rag/ollamaEmbedder";
+import {EmbeddedMemory, Memory} from "./memory";
+import {ChatMessage, convertChatMessageToFormattedString} from "../../chat/chatMessage";
 import {ChatInteractionFragment} from "./chatInteractionFragment";
 
 export const MIN_SIMILARITY_VALUE_TO_FETCH = 0.65;
