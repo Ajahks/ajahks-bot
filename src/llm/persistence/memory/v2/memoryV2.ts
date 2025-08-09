@@ -1,19 +1,40 @@
+export enum MemoryType {
+    OBSERVATION,
+    REFLECTION,
+}
 
-export class MemoryV2 {
+// JSON friendly representation of the memory that can be deserialized into a MemoryV2 object
+export interface MemoryV2Data {
     id: string;
-    createTimestamp: Date;
-    lastAccessedTimestamp?: Date;
+    createTimestamp: string;        // ISO string
+    lastAccessedTimestamp: string;  // ISO string
     description?: string;
     referencedMemoryIds: string[];
+    memoryType: MemoryType;
+}
+
+export class MemoryV2 {
+    readonly id: string;
+    readonly createTimestamp: Date;
+    lastAccessedTimestamp: Date;
+    description?: string;
+    referencedMemoryIds: string[];
+    readonly memoryType: MemoryType;
 
     constructor(
+        memoryType: MemoryType,
+        id?: string,
+        createTimestampISOString?: string,
+        lastAccessedTimestampISOString?: string,
         description?: string,
-        referencedMemoryIds?: string[]
+        referencedMemoryIds?: string[],
     ) {
-        this.id = this.generateId();
-        this.createTimestamp = new Date();
+        this.id = id ?? this.generateId();
+        this.createTimestamp = createTimestampISOString ? new Date(createTimestampISOString) : new Date();
+        this.lastAccessedTimestamp = lastAccessedTimestampISOString ? new Date(lastAccessedTimestampISOString) : this.createTimestamp;
         this.description = description;
         this.referencedMemoryIds = referencedMemoryIds ?? [];
+        this.memoryType = memoryType;
     }
 
     /**
@@ -36,6 +57,43 @@ export class MemoryV2 {
 
     setDescription(description: string) {
         this.description = description;
+    }
+
+    toJson(): MemoryV2Data {
+        return {
+            id: this.id,
+            createTimestamp: this.createTimestamp.toISOString(),
+            lastAccessedTimestamp: this.lastAccessedTimestamp.toISOString(),
+            description: this.description,
+            referencedMemoryIds: this.referencedMemoryIds,
+            memoryType: this.memoryType,
+        }
+    }
+
+    static fromJson(json: MemoryV2Data) {
+        return new MemoryV2(
+            json.memoryType,
+            json.id,
+            json.createTimestamp,
+            json.lastAccessedTimestamp,
+            json.description,
+            json.referencedMemoryIds
+        )
+    }
+
+    static newMemory(
+        memoryType: MemoryType,
+        description?: string,
+        referencedMemoryIds?: string[],
+    ) {
+        return new MemoryV2(
+            memoryType,
+            undefined,
+            undefined,
+            undefined,
+            description,
+            referencedMemoryIds,
+        )
     }
 
     private generateId(): string {

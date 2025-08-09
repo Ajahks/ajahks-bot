@@ -9,4 +9,8 @@ module.exports = {
   transform: {
     ...tsJestTransformCfg,
   },
+  testMatch: [
+    "**/?(*.)+(spec|test).ts",
+    "**/?(*.)+(spec|test).tsx"
+  ]
 };
