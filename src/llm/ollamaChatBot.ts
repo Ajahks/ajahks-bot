@@ -46,7 +46,7 @@ export class OllamaChatBot {
         console.log(chatMessage)
 
         const chatResponse = await this.ollamaInstance.chat({
-            model: 'deepseek-r1:32b',
+            model: 'qwen3:32b',
             messages: [{ role: 'user', content: chatMessage }],
         });
         const responseMessage: ChatMessage = {
