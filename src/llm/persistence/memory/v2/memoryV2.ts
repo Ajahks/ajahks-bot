@@ -6,8 +6,8 @@ export enum MemoryType {
 // JSON friendly representation of the memory that can be deserialized into a MemoryV2 object
 export interface MemoryV2Data {
     id: string;
-    createTimestamp: string;        // ISO string
-    lastAccessedTimestamp: string;  // ISO string
+    createTimestamp: number;
+    lastAccessedTimestamp: number;
     description?: string;
     referencedMemoryIds: string[];
     memoryType: MemoryType;
@@ -24,8 +24,8 @@ export class MemoryV2 {
     constructor(
         memoryType: MemoryType,
         id?: string,
-        createTimestampISOString?: string,
-        lastAccessedTimestampISOString?: string,
+        createTimestampISOString?: number,
+        lastAccessedTimestampISOString?: number,
         description?: string,
         referencedMemoryIds?: string[],
     ) {
@@ -62,8 +62,8 @@ export class MemoryV2 {
     toJson(): MemoryV2Data {
         return {
             id: this.id,
-            createTimestamp: this.createTimestamp.toISOString(),
-            lastAccessedTimestamp: this.lastAccessedTimestamp.toISOString(),
+            createTimestamp: this.createTimestamp.getTime(),
+            lastAccessedTimestamp: this.lastAccessedTimestamp.getTime(),
             description: this.description,
             referencedMemoryIds: this.referencedMemoryIds,
             memoryType: this.memoryType,
