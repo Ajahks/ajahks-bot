@@ -1,3 +1,5 @@
+import {ImportanceRater} from "./ImportanceRater";
+
 export enum MemoryType {
     OBSERVATION,
     REFLECTION,
@@ -11,15 +13,17 @@ export interface MemoryV2Data {
     description?: string;
     referencedMemoryIds: string[];
     memoryType: MemoryType;
+    importance: number;
 }
 
 export class MemoryV2 {
     readonly id: string;
+    readonly memoryType: MemoryType;
     readonly createTimestamp: Date;
     lastAccessedTimestamp: Date;
     description?: string;
     referencedMemoryIds: string[];
-    readonly memoryType: MemoryType;
+    importance: number = 0;
 
     constructor(
         memoryType: MemoryType,
@@ -28,6 +32,7 @@ export class MemoryV2 {
         lastAccessedTimestampISOString?: number,
         description?: string,
         referencedMemoryIds?: string[],
+        importance?: number,
     ) {
         this.id = id ?? this.generateId();
         this.createTimestamp = createTimestampISOString ? new Date(createTimestampISOString) : new Date();
@@ -35,6 +40,7 @@ export class MemoryV2 {
         this.description = description;
         this.referencedMemoryIds = referencedMemoryIds ?? [];
         this.memoryType = memoryType;
+        this.importance = importance ?? 0;
     }
 
     /**
@@ -67,6 +73,7 @@ export class MemoryV2 {
             description: this.description,
             referencedMemoryIds: this.referencedMemoryIds,
             memoryType: this.memoryType,
+            importance: this.importance,
         }
     }
 
@@ -77,7 +84,8 @@ export class MemoryV2 {
             json.createTimestamp,
             json.lastAccessedTimestamp,
             json.description,
-            json.referencedMemoryIds
+            json.referencedMemoryIds,
+            json.importance
         )
     }
 
@@ -85,6 +93,7 @@ export class MemoryV2 {
         memoryType: MemoryType,
         description?: string,
         referencedMemoryIds?: string[],
+        importance?: number,
     ) {
         return new MemoryV2(
             memoryType,
@@ -93,6 +102,7 @@ export class MemoryV2 {
             undefined,
             description,
             referencedMemoryIds,
+            importance,
         )
     }
 
