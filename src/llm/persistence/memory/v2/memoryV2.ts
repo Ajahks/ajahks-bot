@@ -1,5 +1,3 @@
-import {ImportanceRater} from "./ImportanceRater";
-
 export enum MemoryType {
     OBSERVATION,
     REFLECTION,
@@ -10,7 +8,8 @@ export interface MemoryV2Data {
     id: string;
     createTimestamp: number;
     lastAccessedTimestamp: number;
-    description?: string;
+    description: string;
+    embedding: number[];
     referencedMemoryIds: string[];
     memoryType: MemoryType;
     importance: number;
@@ -20,21 +19,24 @@ export class MemoryV2 {
     readonly id: string;
     readonly memoryType: MemoryType;
     readonly createTimestamp: Date;
+    readonly description: string;
     lastAccessedTimestamp: Date;
-    description?: string;
     referencedMemoryIds: string[];
     importance: number = 0;
+    embedding: number[];
 
     constructor(
         memoryType: MemoryType,
+        description: string,
+        embedding: number[] = [],
         id?: string,
         createTimestampISOString?: number,
         lastAccessedTimestampISOString?: number,
-        description?: string,
         referencedMemoryIds?: string[],
         importance?: number,
     ) {
         this.id = id ?? this.generateId();
+        this.embedding = embedding;
         this.createTimestamp = createTimestampISOString ? new Date(createTimestampISOString) : new Date();
         this.lastAccessedTimestamp = lastAccessedTimestampISOString ? new Date(lastAccessedTimestampISOString) : this.createTimestamp;
         this.description = description;
@@ -61,10 +63,6 @@ export class MemoryV2 {
         return this.lastAccessedTimestamp;
     }
 
-    setDescription(description: string) {
-        this.description = description;
-    }
-
     toJson(): MemoryV2Data {
         return {
             id: this.id,
@@ -74,16 +72,18 @@ export class MemoryV2 {
             referencedMemoryIds: this.referencedMemoryIds,
             memoryType: this.memoryType,
             importance: this.importance,
+            embedding: this.embedding,
         }
     }
 
     static fromJson(json: MemoryV2Data) {
         return new MemoryV2(
             json.memoryType,
+            json.description,
+            json.embedding,
             json.id,
             json.createTimestamp,
             json.lastAccessedTimestamp,
-            json.description,
             json.referencedMemoryIds,
             json.importance
         )
@@ -91,16 +91,18 @@ export class MemoryV2 {
 
     static newMemory(
         memoryType: MemoryType,
-        description?: string,
+        description: string,
+        embedding: number[],
         referencedMemoryIds?: string[],
         importance?: number,
     ) {
         return new MemoryV2(
             memoryType,
-            undefined,
-            undefined,
-            undefined,
             description,
+            embedding,
+            undefined,
+            undefined,
+            undefined,
             referencedMemoryIds,
             importance,
         )

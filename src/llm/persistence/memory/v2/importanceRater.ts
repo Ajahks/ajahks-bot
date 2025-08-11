@@ -24,13 +24,19 @@ export class ImportanceRater {
     }
 
     public async rateImportance(memory: MemoryV2): Promise<number> {
-        const prompt = "Given the following memory, rate the importance of the memory from 0 to 10. 0 being not important and 10 being very important. Please response with just a number:\n"
-            + `"${memory.description}"\n`
+        const prompt = "On a scale of 1 to 10, where 1 is purely mundane (e.g AJ went to bed, Alyssa pet her cat) and 10 is extremely poignant (e.g. a break up, a career change), rate the likely poignancy of the following piece of memory (Please just provide a 0-10 integer as your response):\n"
+            + `["${memory.description}"]\n`
 
         const response = await this.ollama.chat({
             model: 'qwen3:32b',
             messages: [{role: 'user', content: prompt}],
         })
-        return parseFloat(response.message.content)
+        const responseNumber = parseInt(response.message.content)
+        if (responseNumber >= 0 && responseNumber <= 10) {
+            return responseNumber
+        } else {
+            console.log(`Invalid importance rating returned: ${responseNumber}.  Defaulting to 0.`)
+            return 0;
+        }
     }
 }

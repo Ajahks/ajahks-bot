@@ -6,7 +6,8 @@ import {LocalOllama} from "./llm/localOllama";
 import {OllamaEmbedder} from "./llm/rag/ollamaEmbedder";
 import {VectorDB} from "./llm/rag/vectorDb";
 import {OllamaSummarizer} from "./llm/rag/summarizer/ollamaSummarizer";
-import {ImportanceRater} from "./llm/persistence/memory/v2/ImportanceRater";
+import {ImportanceRater} from "./llm/persistence/memory/v2/importanceRater";
+import {MemoryStream} from "./llm/persistence/memory/v2/memoryStream";
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
@@ -19,6 +20,7 @@ const ollamaInstance = new LocalOllama();
 const embedder = new OllamaEmbedder(ollamaInstance.instance);
 const summarizer = new OllamaSummarizer(ollamaInstance.instance);
 const vectorDb = new VectorDB("./data/vectordb.json");
+const memoryStream = new MemoryStream("./data/memoryV2Stream.json");
 const chatBot = new OllamaChatBot(ollamaInstance.instance, embedder, summarizer, vectorDb);
 ImportanceRater.init(ollamaInstance.instance)
 
