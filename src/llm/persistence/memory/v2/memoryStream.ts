@@ -4,9 +4,16 @@ import fs from "fs";
 const RECENCY_WEIGHT = 1.0;
 const IMPORTANCE_WEIGHT = 1.0;
 const RELEVANCE_WEIGHT = 1.0;
-const RECENCY_DECAY_FACTOR = 0.555; // How quickly the score decays as time difference goes on.
+const RECENCY_DECAY_FACTOR = 0.9995; // How quickly the score decays as time difference goes on.
 const RECENCY_PERIOD = 1000 * 60; // Period of 1 minute.  Higher period means less score decay for older memories.
 const MAX_CATEGORY_SCORE = 10;
+
+interface MemoryScores {
+    recencyScore: number,
+    importanceScore: number,
+    relevanceScore: number,
+    totalScore: number,
+}
 
 export class MemoryStream {
     private readonly diskFilePath: string;
@@ -47,24 +54,33 @@ export class MemoryStream {
         this.memoryDb.push(memory)
     }
 
-    retrieveRelevantMemories(topicEmbedding: number[], minScore: number, fetchTime: Date) {
+    retrieveRelevantMemories(queriedMemory: MemoryV2, minScore: number, fetchTime: Date) {
         const scoredMemories = this.memoryDb.map((memory) => {
             return {
                 memory: memory,
-                score: this.calculateScoreForMemory(topicEmbedding, memory, fetchTime)
+                score: this.calculateScoreForMemory(memory, queriedMemory, fetchTime)
             }
         })
 
-        const sortedScoredMemories = scoredMemories.sort((a, b) => b.score - a.score);
+        const sortedScoredMemories = scoredMemories.sort((a, b) => b.score.totalScore - a.score.totalScore);
         return sortedScoredMemories
-            .filter((scoredMemory) => {return scoredMemory.score >= minScore})
-            .map((scoredMemory) => {return scoredMemory.memory})
+            .filter((scoredMemory) => {return scoredMemory.score.totalScore >= minScore})
+            .map((scoredMemory) => {
+                console.log(`Memory Score: ${JSON.stringify(scoredMemory.score)} for ${scoredMemory.memory.getMemoryDescription()}\n\n`)
+                return scoredMemory.memory
+            })
     }
 
-    private calculateScoreForMemory(topicEmbedding: number[], memory: MemoryV2, fetchTime: Date): number {
-        return (RECENCY_WEIGHT * this.calculateRecencyScore(memory, fetchTime)) +
-            (IMPORTANCE_WEIGHT * this.calculateImportanceScore(memory)) +
-            (RELEVANCE_WEIGHT * this.calculateRelevanceScore(topicEmbedding, memory))
+    private calculateScoreForMemory(memory: MemoryV2, queriedMemory: MemoryV2, fetchTime: Date): MemoryScores {
+        const recencyScore = RECENCY_WEIGHT * this.calculateRecencyScore(memory, fetchTime);
+        const importanceScore = IMPORTANCE_WEIGHT * this.calculateImportanceScore(memory);
+        const relevanceScore = RELEVANCE_WEIGHT * this.calculateRelevanceScore(queriedMemory.embedding, memory);
+        return {
+            recencyScore: recencyScore,
+            importanceScore: importanceScore,
+            relevanceScore: relevanceScore,
+            totalScore: recencyScore + importanceScore + relevanceScore,
+        }
     }
 
     // Returns a recency score between 0 and MAX_CATEGORY_SCORE.  Exponentially decreases over time.

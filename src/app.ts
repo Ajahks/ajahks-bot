@@ -19,9 +19,10 @@ client.once(Events.ClientReady, (readyClient) => {
 const ollamaInstance = new LocalOllama();
 const embedder = new OllamaEmbedder(ollamaInstance.instance);
 const summarizer = new OllamaSummarizer(ollamaInstance.instance);
+const importanceRater = ImportanceRater.init(ollamaInstance.instance);
 const vectorDb = new VectorDB("./data/vectordb.json");
 const memoryStream = new MemoryStream("./data/memoryV2Stream.json");
-const chatBot = new OllamaChatBot(ollamaInstance.instance, embedder, summarizer, vectorDb);
+const chatBot = new OllamaChatBot(ollamaInstance.instance, embedder, summarizer, importanceRater, vectorDb, memoryStream);
 ImportanceRater.init(ollamaInstance.instance)
 
 vectorDb.readDbFromDisk();
@@ -36,7 +37,7 @@ client.on(Events.MessageCreate, async (message) => {
             userId: message.author.username,
             userName: message.author.displayName,
             message: message.cleanContent,
-            timestamp: message.createdAt.toString()
+            timestamp: message.createdAt.toISOString()
         }
 
         chatBot.chat(receivedMessage).then(response => {

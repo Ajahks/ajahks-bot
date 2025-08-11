@@ -6,4 +6,5 @@ node_modules/
 src/context/background.ts
 src/context/steam/playerIds.ts
 .idea
+.backup
 data/*

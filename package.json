@@ -13,6 +13,7 @@
     "copy-data": "mkdir -p dist && cp -r ./data ./dist/data",
     "start": "node ./dist/app.js",
     "init-db": "mkdir -p ./data && node ./dist/llm/rag/knowledgeBaseInitializer.js",
+    "init-memory": "mkdir -p ./data && node ./dist/llm/persistence/memory/v2/memoryInitializer.js",
     "test": "jest"
   },
   "author": "Arren De Manuel",

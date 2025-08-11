@@ -26,7 +26,7 @@ test("saveToDisk creates a new file with the given path", () => {
     const memoryStream = new MemoryStream(TEST_FILE_PATH);
     memoryStream.saveToDisk();
 
-    expect(fs.access(TEST_FILE_PATH)).resolves.not.toThrow();
+    return expect(fs.access(TEST_FILE_PATH)).resolves.not.toThrow();
 })
 
 test("add a memory to the memory stream adds a memory", () => {
@@ -68,7 +68,9 @@ test("add a memories to the memory stream, saveToDisk, and generating a new memo
 test("retrieveRelevantMemories filters by minScore and sorts by score descending", () => {
     const memoryStream = new MemoryStream(TEST_FILE_PATH);
     const fetchTime = new Date();
-    const topicEmbedding = [1, 0]; // 2D for simplicity
+
+    // Query memory provides the topic embedding
+    const queried = new MemoryV2(MemoryType.OBSERVATION, "query", [1, 0]);
 
     // Same recency and importance; ordering driven by cosine similarity mapping
     const memA = new MemoryV2(MemoryType.OBSERVATION, "A", [1, 0]);   // cos=1 -> relevance=10
@@ -77,18 +79,18 @@ test("retrieveRelevantMemories filters by minScore and sorts by score descending
 
     const memB = new MemoryV2(MemoryType.OBSERVATION, "B", [0, 1]);   // cos=0 -> relevance=5
     memB.importance = 0;
-    memA.setLastAccessedTimestamp(fetchTime); // max recency score of 10
+    memB.setLastAccessedTimestamp(fetchTime); // max recency score of 10
 
     const memC = new MemoryV2(MemoryType.OBSERVATION, "C", [-1, 0]);  // cos=-1 -> relevance=0
     memC.importance = 0;
-    memA.setLastAccessedTimestamp(fetchTime); // max recency score of 10
+    memC.setLastAccessedTimestamp(fetchTime); // max recency score of 10
 
     memoryStream.addMemory(memA);
     memoryStream.addMemory(memB);
     memoryStream.addMemory(memC);
 
     // Recency=10 for all; totals: A=20, B=15, C=10
-    const result = memoryStream.retrieveRelevantMemories(topicEmbedding, 15, fetchTime);
+    const result = memoryStream.retrieveRelevantMemories(queried, 15, fetchTime);
 
     expect(result.length).toBe(2);
     expect(result[0]).toBe(memA);
@@ -98,7 +100,8 @@ test("retrieveRelevantMemories filters by minScore and sorts by score descending
 test("retrieveRelevantMemories considers recency decay in ordering", () => {
     const memoryStream = new MemoryStream(TEST_FILE_PATH);
     const fetchTime = new Date();
-    const topicEmbedding = [1, 0];
+
+    const queried = new MemoryV2(MemoryType.OBSERVATION, "query", [1, 0]);
 
     const memRecent = new MemoryV2(MemoryType.OBSERVATION, "recent", [1, 0]);
     memRecent.importance = 0;
@@ -112,7 +115,7 @@ test("retrieveRelevantMemories considers recency decay in ordering", () => {
     memoryStream.addMemory(memOld);
     memoryStream.addMemory(memRecent);
 
-    const result = memoryStream.retrieveRelevantMemories(topicEmbedding, 0, fetchTime);
+    const result = memoryStream.retrieveRelevantMemories(queried, 0, fetchTime);
 
     expect(result.length).toBe(2);
     // With identical embeddings and importance, more recent should rank higher
@@ -123,13 +126,14 @@ test("retrieveRelevantMemories considers recency decay in ordering", () => {
 test("retrieveRelevantMemories returns empty when minScore is above all totals", () => {
     const memoryStream = new MemoryStream(TEST_FILE_PATH);
     const fetchTime = new Date();
-    const topicEmbedding = [1, 0];
+
+    const queried = new MemoryV2(MemoryType.OBSERVATION, "query", [1, 0]);
 
     const mem = new MemoryV2(MemoryType.OBSERVATION, "only", [0, 1]); // relevance ~5, recency 10 => total ~15
     mem.importance = 0;
     mem.setLastAccessedTimestamp(fetchTime);
     memoryStream.addMemory(mem);
 
-    const result = memoryStream.retrieveRelevantMemories(topicEmbedding, 29, fetchTime);
+    const result = memoryStream.retrieveRelevantMemories(queried, 29, fetchTime);
     expect(result.length).toBe(0);
 });

@@ -1,5 +1,6 @@
 import {Ollama} from "ollama";
 import {MemoryV2} from "./memoryV2";
+import {splitReasoningResponse} from "../../../reasoningModelResponseUtils";
 
 export class ImportanceRater {
     static #instance: ImportanceRater;
@@ -23,15 +24,16 @@ export class ImportanceRater {
         this.ollama = ollama;
     }
 
-    public async rateImportance(memory: MemoryV2): Promise<number> {
+    public async rateImportance(memoryDescription: string): Promise<number> {
         const prompt = "On a scale of 1 to 10, where 1 is purely mundane (e.g AJ went to bed, Alyssa pet her cat) and 10 is extremely poignant (e.g. a break up, a career change), rate the likely poignancy of the following piece of memory (Please just provide a 0-10 integer as your response):\n"
-            + `["${memory.description}"]\n`
+            + `["${memoryDescription}"]\n`
 
         const response = await this.ollama.chat({
-            model: 'qwen3:32b',
+            model: 'qwen3:8b',
             messages: [{role: 'user', content: prompt}],
         })
-        const responseNumber = parseInt(response.message.content)
+        const parsedResponse = splitReasoningResponse(response.message.content).message;
+        const responseNumber = parseInt(parsedResponse)
         if (responseNumber >= 0 && responseNumber <= 10) {
             return responseNumber
         } else {

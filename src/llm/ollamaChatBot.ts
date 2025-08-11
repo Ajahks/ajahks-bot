@@ -11,38 +11,42 @@ import {OllamaSummarizer} from "./rag/summarizer/ollamaSummarizer";
 import {ChatMessage} from "./persistence/chat/chatMessage";
 import {EmbeddedMemory} from "./persistence/memory/v1/memory";
 import {splitReasoningResponse} from "./reasoningModelResponseUtils";
+import {MemoryStream} from "./persistence/memory/v2/memoryStream";
+import {ImportanceRater} from "./persistence/memory/v2/importanceRater";
+import {MemoryType, MemoryV2} from "./persistence/memory/v2/memoryV2";
 
 export class OllamaChatBot {
     private ollamaInstance: Ollama;
     private embedder: OllamaEmbedder;
+    private summarizer: OllamaSummarizer;
+    importanceRater: ImportanceRater;
     private dotaKnowledgeDb: VectorDB;
     private chatKnowledgeBase: ChatMessageKnowledgeBase;
+    private memoryStream: MemoryStream;
 
-     constructor(instance: Ollama, embedder: OllamaEmbedder, summarizer: OllamaSummarizer, vectorDb: VectorDB) {
+     constructor(instance: Ollama, embedder: OllamaEmbedder, summarizer: OllamaSummarizer, importanceRater: ImportanceRater, vectorDb: VectorDB, memoryStream: MemoryStream) {
         this.ollamaInstance = instance;
         this.embedder = embedder;
+        this.summarizer = summarizer;
+        this.importanceRater = importanceRater;
         this.dotaKnowledgeDb = vectorDb;
-        this.chatKnowledgeBase = new ChatMessageKnowledgeBase(summarizer, embedder)
+        this.chatKnowledgeBase = new ChatMessageKnowledgeBase(summarizer, embedder);
+        this.memoryStream = memoryStream;
     }
 
     async chat(message: ChatMessage) {
-        const chatMemories = await this.chatKnowledgeBase.findMemoriesForChatMessage(message);
-        const context = await this.generateContext(message, chatMemories);
+        const newMemory = await this.generateMemoryFromChatMessage(message);
+
+        const relevantMemories = this.memoryStream.retrieveRelevantMemories(newMemory, 15, new Date(message.timestamp));
+        const relevantMemoriesString = relevantMemories.map(memory => "    - {" + memory.getMemoryDescription() + "}").join("\n");
+
+        const formattedDate = new Date(message.timestamp).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit"});
         const chatMessage: string =
-            "========== START INSTRUCTIONS ========== \n" +
-            INSTRUCTION_CONTEXT +
-            `\n Given the below context if needed please respond to the below message (See START ACTUAL MESSAGE) as ${AI_NAME} and always stay in character based on the this instruction context.\n` +
-            `Limit response to under 2000 characters. And your response should just be the message as the character, no special formatting needed:\n` +
-            "========== END INSTRUCTIONS ========== \n" +
-            context +
-            "========== START INSTRUCTIONS (again) ========== \n" +
-            INSTRUCTION_CONTEXT +
-            `\n Given the above context if needed please respond to the below message as ${AI_NAME} and always stay in character based on the this instruction context.\n` +
-            `Limit response to under 2000 characters. And your response should just be the message as the character, no special formatting needed:\n` +
-            "========== END INSTRUCTIONS ========== \n" +
-            "========== START ACTUAL MESSAGE TO BOT ========== \n" +
-            message.userName + ": " + message.message +
-            "\n========== END ACTUAL MESSAGE TO BOT ========== \n"
+            INSTRUCTION_CONTEXT + "\n" +
+            "[Relevant memories]:\n" +
+            relevantMemoriesString + "\n" +
+            "[Message to respond to]: \n" +
+            `  {${formattedDate}} ${message.userName}: ${message.message}`
         console.log(chatMessage)
 
         const chatResponse = await this.ollamaInstance.chat({
@@ -55,8 +59,25 @@ export class OllamaChatBot {
             message: splitReasoningResponse(chatResponse.message.content).message,
             timestamp: new Date().toString()
         }
-        this.chatKnowledgeBase.storeChatInteractionInMemories(message, responseMessage, chatMemories)
+        this.memoryStream.addMemory(newMemory);
+        this.memoryStream.saveToDisk()
         return responseMessage
+    }
+
+    private async generateMemoryFromChatMessage(message: ChatMessage): Promise<MemoryV2> {
+        const userMessage = `Author:${message.userName}\nMessage: ${message.message}`;
+        const messageSummary = await this.summarizer.summarizeMessage(userMessage);
+        console.log(`Summarized message: ${messageSummary}`)
+        const messageSummaryEmbedding = await this.embedder.embedChunk(messageSummary);
+        const memoryImportance = await this.importanceRater.rateImportance(messageSummary);
+        console.log(`Assigned importance: ${memoryImportance}`)
+        return MemoryV2.newMemory(
+            MemoryType.OBSERVATION,
+            messageSummary,
+            messageSummaryEmbedding.embedding,
+            [],
+            memoryImportance
+        )
     }
 
     private async generateContext(message: ChatMessage, chatMemories: EmbeddedMemory[]) {
