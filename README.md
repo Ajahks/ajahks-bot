@@ -8,6 +8,11 @@ npm run build
 npm run init-db
 ```
 
+## Initializing the Memory 
+```
+npm run init-memory
+```
+
 ## Running the Bot
 ```
 npm run start

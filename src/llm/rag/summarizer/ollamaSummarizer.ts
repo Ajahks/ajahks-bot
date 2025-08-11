@@ -32,6 +32,7 @@ export class OllamaSummarizer {
     async summarizeMessage(message: string): Promise<string> {
         const prompt = `
             The following is a message from a discord user. Please summarize the contents of the message and be sure to pick out any key information that should be remembered. 
+            No need to include any dates or times in the summary UNLESS it is relevant to the message content. (i.e. the user plans a to do hold a party at April 2 10pm)
             No need to include any special formatting, just a plain text summary is fine.
             Message: ["${message}"]
             `

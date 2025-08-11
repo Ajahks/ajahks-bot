@@ -1,6 +1,7 @@
 export enum MemoryType {
     OBSERVATION,
     REFLECTION,
+    SEED,
 }
 
 // JSON friendly representation of the memory that can be deserialized into a MemoryV2 object

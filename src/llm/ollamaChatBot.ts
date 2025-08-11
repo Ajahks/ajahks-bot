@@ -43,9 +43,9 @@ export class OllamaChatBot {
         const formattedDate = new Date(message.timestamp).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit"});
         const chatMessage: string =
             INSTRUCTION_CONTEXT + "\n" +
-            "[Relevant memories]:\n" +
-            relevantMemoriesString + "\n" +
-            "[Message to respond to]: \n" +
+            "[Relevant memories (only reference these as you see fit)]:\n" +
+            relevantMemoriesString + "\n\n" +
+            "[Message to respond to (Reply directly to this only)]: \n" +
             `  {${formattedDate}} ${message.userName}: ${message.message}`
         console.log(chatMessage)
 

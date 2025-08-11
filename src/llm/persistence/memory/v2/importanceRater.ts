@@ -1,5 +1,4 @@
 import {Ollama} from "ollama";
-import {MemoryV2} from "./memoryV2";
 import {splitReasoningResponse} from "../../../reasoningModelResponseUtils";
 
 export class ImportanceRater {

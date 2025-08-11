@@ -4,8 +4,8 @@ import fs from "fs";
 const RECENCY_WEIGHT = 1.0;
 const IMPORTANCE_WEIGHT = 1.0;
 const RELEVANCE_WEIGHT = 1.0;
-const RECENCY_DECAY_FACTOR = 0.9995; // How quickly the score decays as time difference goes on.
-const RECENCY_PERIOD = 1000 * 60; // Period of 1 minute.  Higher period means less score decay for older memories.
+const RECENCY_DECAY_FACTOR = 0.995; // How quickly the score decays as time difference goes on.
+const RECENCY_PERIOD = 1000 * 60 * 60; // Period of 1 hour.  Higher period means less score decay for older memories.
 const MAX_CATEGORY_SCORE = 10;
 
 interface MemoryScores {
@@ -67,6 +67,7 @@ export class MemoryStream {
             .filter((scoredMemory) => {return scoredMemory.score.totalScore >= minScore})
             .map((scoredMemory) => {
                 console.log(`Memory Score: ${JSON.stringify(scoredMemory.score)} for ${scoredMemory.memory.getMemoryDescription()}\n\n`)
+                scoredMemory.memory.lastAccessedTimestamp = fetchTime;
                 return scoredMemory.memory
             })
     }
