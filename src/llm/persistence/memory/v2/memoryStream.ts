@@ -1,4 +1,4 @@
-import {MemoryV2, MemoryV2Data} from "./memoryV2";
+import {MemoryType, MemoryV2, MemoryV2Data} from "./memoryV2";
 import fs from "fs";
 
 const RECENCY_WEIGHT = 1.0;
@@ -17,7 +17,7 @@ interface MemoryScores {
 
 export class MemoryStream {
     private readonly diskFilePath: string;
-    memoryDb: MemoryV2[] = [];
+    memoryDb: Map<string, MemoryV2> = new Map();
 
     constructor(diskFilePath: string) {
         this.diskFilePath = diskFilePath;
@@ -26,7 +26,7 @@ export class MemoryStream {
 
     saveToDisk() {
         console.log(`Writing MemoryStream to file: ${this.diskFilePath}`);
-        const jsonMemoryDb: MemoryV2Data[] = this.memoryDb.map((memory) => {
+        const jsonMemoryDb: MemoryV2Data[] = Array.from(this.memoryDb.values()).map((memory) => {
             return memory.toJson()
         })
         const json = JSON.stringify(jsonMemoryDb, null, 2);
@@ -42,20 +42,23 @@ export class MemoryStream {
         try {
             const data = fs.readFileSync(this.diskFilePath, 'utf-8');
             const jsonMemoryDb = JSON.parse(data);
-            this.memoryDb = jsonMemoryDb.map((memoryData: MemoryV2Data) => {
-                return MemoryV2.fromJson(memoryData)
-            })
+            this.memoryDb = new Map<string, MemoryV2>(
+                jsonMemoryDb.map((memoryData: MemoryV2Data) => {
+                    const memory = MemoryV2.fromJson(memoryData)
+                    return [memory.id, memory]
+                })
+            )
         } catch (error) {
             console.log(`Failed to read file and populate db, please run \`npm run init-db\` or the db is not initialized yet: ${error}`)
         }
     }
 
     addMemory(memory: MemoryV2) {
-        this.memoryDb.push(memory)
+        this.memoryDb.set(memory.id, memory)
     }
 
     retrieveRelevantMemories(queriedMemory: MemoryV2, minScore: number, fetchTime: Date) {
-        const scoredMemories = this.memoryDb.map((memory) => {
+        const scoredMemories = Array.from(this.memoryDb.values()).map((memory) => {
             return {
                 memory: memory,
                 score: this.calculateScoreForMemory(memory, queriedMemory, fetchTime)
@@ -70,6 +73,20 @@ export class MemoryStream {
                 scoredMemory.memory.lastAccessedTimestamp = fetchTime;
                 return scoredMemory.memory
             })
+    }
+
+    getAllMemories(memoryType?: MemoryType): MemoryV2[] {
+        const memories = Array.from(this.memoryDb.values())
+        if (memoryType !== undefined) {
+            return memories.filter((memory) => {
+                return memory.memoryType == memoryType
+            })
+        }
+        return memories
+    }
+
+    removeMemory(memoryId: string) {
+        this.memoryDb.delete(memoryId)
     }
 
     private calculateScoreForMemory(memory: MemoryV2, queriedMemory: MemoryV2, fetchTime: Date): MemoryScores {

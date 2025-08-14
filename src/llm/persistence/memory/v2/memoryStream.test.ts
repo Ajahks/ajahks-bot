@@ -19,7 +19,7 @@ afterEach(async () => {
 test("constructing a memory stream creates a new stream with given path", () => {
   const memoryStream = new MemoryStream(TEST_FILE_PATH);
 
-  expect(memoryStream.memoryDb.length).toEqual(0);
+  expect(Array.from(memoryStream.memoryDb.values()).length).toEqual(0);
 });
 
 test("saveToDisk creates a new file with the given path", () => {
@@ -34,8 +34,8 @@ test("add a memory to the memory stream adds a memory", () => {
     const memory = new MemoryV2(MemoryType.OBSERVATION, "", []);
     memoryStream.addMemory(memory)
 
-    expect(memoryStream.memoryDb.length).toEqual(1);
-    expect(memoryStream.memoryDb[0]).toEqual(memory);
+    expect(memoryStream.memoryDb.size).toEqual(1);
+    expect(memoryStream.memoryDb.get(memory.id)).toEqual(memory);
 })
 
 test("add a memories to the memory stream adds a memories without changing previous", () => {
@@ -45,9 +45,9 @@ test("add a memories to the memory stream adds a memories without changing previ
     memoryStream.addMemory(memory1)
     memoryStream.addMemory(memory2)
 
-    expect(memoryStream.memoryDb.length).toEqual(2);
-    expect(memoryStream.memoryDb[0]).toEqual(memory1);
-    expect(memoryStream.memoryDb[1]).toEqual(memory2);
+    expect(memoryStream.memoryDb.size).toEqual(2);
+    expect(memoryStream.memoryDb.get(memory1.id)).toEqual(memory1);
+    expect(memoryStream.memoryDb.get(memory2.id)).toEqual(memory2);
 })
 
 test("add a memories to the memory stream, saveToDisk, and generating a new memory stream with the same path loads same memories", () => {
@@ -60,9 +60,9 @@ test("add a memories to the memory stream, saveToDisk, and generating a new memo
 
     const newMemoryStream = new MemoryStream(TEST_FILE_PATH);
 
-    expect(newMemoryStream.memoryDb.length).toEqual(memoryStream.memoryDb.length);
-    expect(newMemoryStream.memoryDb[0]).toEqual(memoryStream.memoryDb[0]);
-    expect(newMemoryStream.memoryDb[1]).toEqual(memoryStream.memoryDb[1]);
+    expect(newMemoryStream.memoryDb.size).toEqual(Array.from(memoryStream.memoryDb.values()).length);
+    expect(newMemoryStream.memoryDb.get(memory1.id)).toEqual(memoryStream.memoryDb.get(memory1.id));
+    expect(newMemoryStream.memoryDb.get(memory2.id)).toEqual(memoryStream.memoryDb.get(memory2.id));
 })
 
 test("retrieveRelevantMemories filters by minScore and sorts by score descending", () => {
@@ -136,4 +136,83 @@ test("retrieveRelevantMemories returns empty when minScore is above all totals",
 
     const result = memoryStream.retrieveRelevantMemories(queried, 29, fetchTime);
     expect(result.length).toBe(0);
+});
+
+test("getAllMemories returns all memories when no type is specified", () => {
+    const memoryStream = new MemoryStream(TEST_FILE_PATH);
+
+    const mem1 = new MemoryV2(MemoryType.OBSERVATION, "obs1", []);
+    const mem2 = new MemoryV2(MemoryType.REFLECTION, "ref1", []);
+    const mem3 = new MemoryV2(MemoryType.SEED, "seed1", []);
+
+    memoryStream.addMemory(mem1);
+    memoryStream.addMemory(mem2);
+    memoryStream.addMemory(mem3);
+
+    const result = memoryStream.getAllMemories();
+
+    expect(result.length).toBe(3);
+    // Ensure insertion order is preserved
+    expect(result[0]).toBe(mem1);
+    expect(result[1]).toBe(mem2);
+    expect(result[2]).toBe(mem3);
+});
+
+test("getAllMemories filters by specified MemoryType", () => {
+    const memoryStream = new MemoryStream(TEST_FILE_PATH);
+
+    const mem1 = new MemoryV2(MemoryType.OBSERVATION, "obs1", []);
+    const mem2 = new MemoryV2(MemoryType.REFLECTION, "ref1", []);
+    const mem3 = new MemoryV2(MemoryType.OBSERVATION, "obs2", []);
+
+    memoryStream.addMemory(mem1);
+    memoryStream.addMemory(mem2);
+    memoryStream.addMemory(mem3);
+
+    const observations = memoryStream.getAllMemories(MemoryType.OBSERVATION);
+
+    expect(observations).toHaveLength(2);
+    expect(observations[0]).toBe(mem1);
+    expect(observations[1]).toBe(mem3);
+
+    // Ensure underlying db not mutated
+    expect(memoryStream.memoryDb.size).toEqual(3);
+});
+
+test("getAllMemories returns empty array when no memories match the type", () => {
+    const memoryStream = new MemoryStream(TEST_FILE_PATH);
+
+    const mem = new MemoryV2(MemoryType.REFLECTION, "ref1", []);
+    memoryStream.addMemory(mem);
+
+    const seeds = memoryStream.getAllMemories(MemoryType.SEED);
+
+    expect(Array.isArray(seeds)).toBe(true);
+    expect(seeds).toHaveLength(0);
+});
+
+test("removeMemory removes the specified memory without affecting others", () => {
+    const memoryStream = new MemoryStream(TEST_FILE_PATH);
+
+    const mem1 = new MemoryV2(MemoryType.OBSERVATION, "obs1", []);
+    const mem2 = new MemoryV2(MemoryType.REFLECTION, "ref1", []);
+    const mem3 = new MemoryV2(MemoryType.SEED, "seed1", []);
+
+    memoryStream.addMemory(mem1);
+    memoryStream.addMemory(mem2);
+    memoryStream.addMemory(mem3);
+
+    expect(memoryStream.memoryDb.size).toBe(3);
+
+    memoryStream.removeMemory(mem2.id);
+
+    expect(memoryStream.memoryDb.size).toBe(2);
+    expect(memoryStream.memoryDb.get(mem2.id)).toBeUndefined();
+
+    const remaining = memoryStream.getAllMemories();
+    expect(remaining).toEqual([mem1, mem3]);
+
+    // Removing a non-existent id should be a no-op
+    memoryStream.removeMemory("non-existent-id");
+    expect(memoryStream.memoryDb.size).toBe(2);
 });
