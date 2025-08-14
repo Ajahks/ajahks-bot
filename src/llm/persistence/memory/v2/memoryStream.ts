@@ -57,7 +57,7 @@ export class MemoryStream {
         this.memoryDb.set(memory.id, memory)
     }
 
-    retrieveRelevantMemories(queriedMemory: MemoryV2, minScore: number, fetchTime: Date) {
+    retrieveRelevantMemories(queriedMemory: MemoryV2, minScore: number, fetchTime: Date, maxNumResults?: number): MemoryV2[] {
         const scoredMemories = Array.from(this.memoryDb.values()).map((memory) => {
             return {
                 memory: memory,
@@ -66,13 +66,16 @@ export class MemoryStream {
         })
 
         const sortedScoredMemories = scoredMemories.sort((a, b) => b.score.totalScore - a.score.totalScore);
-        return sortedScoredMemories
+        const filteredMemories = sortedScoredMemories
             .filter((scoredMemory) => {return scoredMemory.score.totalScore >= minScore})
             .map((scoredMemory) => {
-                console.log(`Memory Score: ${JSON.stringify(scoredMemory.score)} for ${scoredMemory.memory.getMemoryDescription()}\n\n`)
                 scoredMemory.memory.lastAccessedTimestamp = fetchTime;
                 return scoredMemory.memory
             })
+        if (maxNumResults !== undefined) {
+            return filteredMemories.slice(0, maxNumResults)
+        }
+        return filteredMemories
     }
 
     getAllMemories(memoryType?: MemoryType): MemoryV2[] {

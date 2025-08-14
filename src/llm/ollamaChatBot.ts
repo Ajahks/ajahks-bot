@@ -14,6 +14,24 @@ import {splitReasoningResponse} from "./reasoningModelResponseUtils";
 import {MemoryStream} from "./persistence/memory/v2/memoryStream";
 import {ImportanceRater} from "./persistence/memory/v2/importanceRater";
 import {MemoryType, MemoryV2} from "./persistence/memory/v2/memoryV2";
+import {ReflectionGenerator} from "./persistence/memory/v2/reflectionGenerator";
+import {
+    DMChannel,
+    NewsChannel,
+    PartialDMChannel, PrivateThreadChannel, PublicThreadChannel,
+    StageChannel, TextChannel, VoiceChannel
+} from "discord.js";
+
+// Main alias
+export type AnyChannel =
+    | DMChannel
+    | PartialDMChannel
+    | NewsChannel
+    | StageChannel
+    | TextChannel
+    | PublicThreadChannel<boolean>
+    | PrivateThreadChannel
+    | VoiceChannel;
 
 export class OllamaChatBot {
     private ollamaInstance: Ollama;
@@ -23,8 +41,9 @@ export class OllamaChatBot {
     private dotaKnowledgeDb: VectorDB;
     private chatKnowledgeBase: ChatMessageKnowledgeBase;
     private memoryStream: MemoryStream;
+    private reflectionGenerator: ReflectionGenerator;
 
-     constructor(instance: Ollama, embedder: OllamaEmbedder, summarizer: OllamaSummarizer, importanceRater: ImportanceRater, vectorDb: VectorDB, memoryStream: MemoryStream) {
+     constructor(instance: Ollama, embedder: OllamaEmbedder, summarizer: OllamaSummarizer, importanceRater: ImportanceRater, vectorDb: VectorDB, memoryStream: MemoryStream, reflectionGenerator: ReflectionGenerator) {
         this.ollamaInstance = instance;
         this.embedder = embedder;
         this.summarizer = summarizer;
@@ -32,12 +51,13 @@ export class OllamaChatBot {
         this.dotaKnowledgeDb = vectorDb;
         this.chatKnowledgeBase = new ChatMessageKnowledgeBase(summarizer, embedder);
         this.memoryStream = memoryStream;
+        this.reflectionGenerator = reflectionGenerator;
     }
 
-    async chat(message: ChatMessage) {
+    async chat(message: ChatMessage, channel: AnyChannel) {
         const newMemory = await this.generateMemoryFromChatMessage(message);
 
-        const relevantMemories = this.memoryStream.retrieveRelevantMemories(newMemory, 18.5, new Date(message.timestamp));
+        const relevantMemories = this.memoryStream.retrieveRelevantMemories(newMemory, 20, new Date(message.timestamp), 25);
         const relevantMemoriesString = relevantMemories.map(memory => {
             const formattedMemoryDate = new Date(memory.createTimestamp).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit"});
             return `    - {${formattedMemoryDate}} {` + memory.getMemoryDescription() + "}"
@@ -52,6 +72,7 @@ export class OllamaChatBot {
             `  {${formattedDate}} ${message.userName}: ${message.message}`
         console.log(chatMessage)
 
+        channel.sendTyping()
         const chatResponse = await this.ollamaInstance.chat({
             model: 'qwen3:32b',
             messages: [{ role: 'user', content: chatMessage }],
@@ -64,6 +85,9 @@ export class OllamaChatBot {
         }
         this.memoryStream.addMemory(newMemory);
         this.memoryStream.saveToDisk()
+
+        this.pushMemoryToReflectionGeneratorAndGenerateIfAboveThreshold(newMemory, 15)
+
         return responseMessage
     }
 
@@ -81,6 +105,21 @@ export class OllamaChatBot {
             [],
             memoryImportance
         )
+    }
+
+    private async pushMemoryToReflectionGeneratorAndGenerateIfAboveThreshold(memory: MemoryV2, thresholdToPerformReflection: number) {
+        const numMemories = this.reflectionGenerator.pushMemory(memory)
+        if (numMemories < thresholdToPerformReflection) return
+
+        // reflect and add to memories
+        this.reflectionGenerator.reflectOnQueuedMemories().then(reflectionMemories => {
+            console.log("Reflection threshold reached, generating reflections!");
+            reflectionMemories.forEach(reflectionMemory => {
+                console.log(`Adding Reflection to memory: ${reflectionMemory.getMemoryDescription()}`)
+                this.memoryStream.addMemory(reflectionMemory);
+            })
+            this.memoryStream.saveToDisk();
+        })
     }
 
     private async generateContext(message: ChatMessage, chatMemories: EmbeddedMemory[]) {

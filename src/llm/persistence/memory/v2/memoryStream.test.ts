@@ -216,3 +216,57 @@ test("removeMemory removes the specified memory without affecting others", () =>
     memoryStream.removeMemory("non-existent-id");
     expect(memoryStream.memoryDb.size).toBe(2);
 });
+
+test("retrieveRelevantMemories respects maxNumResults limit", () => {
+    const memoryStream = new MemoryStream(TEST_FILE_PATH);
+    const fetchTime = new Date();
+
+    const queried = new MemoryV2(MemoryType.OBSERVATION, "query", [1, 0]);
+
+    // Construct memories with identical importance and recency, differing only by relevance
+    const memA = new MemoryV2(MemoryType.OBSERVATION, "A", [1, 0]);   // cos=1 -> relevance=10
+    memA.importance = 0;
+    memA.setLastAccessedTimestamp(fetchTime); // recency ~ 10
+
+    const memB = new MemoryV2(MemoryType.OBSERVATION, "B", [0, 1]);   // cos=0 -> relevance=5
+    memB.importance = 0;
+    memB.setLastAccessedTimestamp(fetchTime); // recency ~ 10
+
+    const memC = new MemoryV2(MemoryType.OBSERVATION, "C", [-1, 0]);  // cos=-1 -> relevance=0
+    memC.importance = 0;
+    memC.setLastAccessedTimestamp(fetchTime); // recency ~ 10
+
+    memoryStream.addMemory(memA);
+    memoryStream.addMemory(memB);
+    memoryStream.addMemory(memC);
+
+    // Totals: A ~20, B ~15, C ~10
+    const result = memoryStream.retrieveRelevantMemories(queried, 0, fetchTime, 2);
+
+    expect(result.length).toBe(2);
+    expect(result[0]).toBe(memA);
+    expect(result[1]).toBe(memB);
+});
+
+test("retrieveRelevantMemories returns empty array when maxNumResults is 0", () => {
+    const memoryStream = new MemoryStream(TEST_FILE_PATH);
+    const fetchTime = new Date();
+
+    const queried = new MemoryV2(MemoryType.OBSERVATION, "query", [1, 0]);
+
+    const memA = new MemoryV2(MemoryType.OBSERVATION, "A", [1, 0]);
+    memA.importance = 0;
+    memA.setLastAccessedTimestamp(fetchTime);
+
+    const memB = new MemoryV2(MemoryType.OBSERVATION, "B", [0, 1]);
+    memB.importance = 0;
+    memB.setLastAccessedTimestamp(fetchTime);
+
+    memoryStream.addMemory(memA);
+    memoryStream.addMemory(memB);
+
+    const result = memoryStream.retrieveRelevantMemories(queried, 0, fetchTime, 0);
+
+    expect(Array.isArray(result)).toBe(true);
+    expect(result).toHaveLength(0);
+});

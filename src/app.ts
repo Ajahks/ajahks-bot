@@ -8,6 +8,7 @@ import {VectorDB} from "./llm/rag/vectorDb";
 import {OllamaSummarizer} from "./llm/rag/summarizer/ollamaSummarizer";
 import {ImportanceRater} from "./llm/persistence/memory/v2/importanceRater";
 import {MemoryStream} from "./llm/persistence/memory/v2/memoryStream";
+import {ReflectionGenerator} from "./llm/persistence/memory/v2/reflectionGenerator";
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
@@ -22,7 +23,8 @@ const summarizer = new OllamaSummarizer(ollamaInstance.instance);
 const importanceRater = ImportanceRater.init(ollamaInstance.instance);
 const vectorDb = new VectorDB("./data/vectordb.json");
 const memoryStream = new MemoryStream("./data/memoryV2Stream.json");
-const chatBot = new OllamaChatBot(ollamaInstance.instance, embedder, summarizer, importanceRater, vectorDb, memoryStream);
+const reflectionGenerator = new ReflectionGenerator(ollamaInstance.instance, memoryStream, embedder, importanceRater);
+const chatBot = new OllamaChatBot(ollamaInstance.instance, embedder, summarizer, importanceRater, vectorDb, memoryStream, reflectionGenerator);
 ImportanceRater.init(ollamaInstance.instance)
 
 vectorDb.readDbFromDisk();
@@ -40,7 +42,7 @@ client.on(Events.MessageCreate, async (message) => {
             timestamp: message.createdAt.toISOString()
         }
 
-        chatBot.chat(receivedMessage).then(response => {
+        chatBot.chat(receivedMessage, message.channel).then(response => {
             if (response != null) {
                 message.channel.send(response.message)
             }
