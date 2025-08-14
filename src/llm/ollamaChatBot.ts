@@ -38,7 +38,10 @@ export class OllamaChatBot {
         const newMemory = await this.generateMemoryFromChatMessage(message);
 
         const relevantMemories = this.memoryStream.retrieveRelevantMemories(newMemory, 18.5, new Date(message.timestamp));
-        const relevantMemoriesString = relevantMemories.map(memory => "    - {" + memory.getMemoryDescription() + "}").join("\n");
+        const relevantMemoriesString = relevantMemories.map(memory => {
+            const formattedMemoryDate = new Date(memory.createTimestamp).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit"});
+            return `    - {${formattedMemoryDate}} {` + memory.getMemoryDescription() + "}"
+        }).join("\n");
 
         const formattedDate = new Date(message.timestamp).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit"});
         const chatMessage: string =
