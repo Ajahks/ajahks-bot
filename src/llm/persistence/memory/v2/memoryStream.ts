@@ -68,14 +68,17 @@ export class MemoryStream {
         const sortedScoredMemories = scoredMemories.sort((a, b) => b.score.totalScore - a.score.totalScore);
         const filteredMemories = sortedScoredMemories
             .filter((scoredMemory) => {return scoredMemory.score.totalScore >= minScore})
-            .map((scoredMemory) => {
-                scoredMemory.memory.lastAccessedTimestamp = fetchTime;
-                return scoredMemory.memory
-            })
+            .map((scoredMemory) => {return scoredMemory.memory})
         if (maxNumResults !== undefined) {
-            return filteredMemories.slice(0, maxNumResults)
+            return filteredMemories.slice(0, maxNumResults).map(mem => {
+                mem.lastAccessedTimestamp = fetchTime;
+                return mem
+            })
         }
-        return filteredMemories
+        return filteredMemories.map(mem => {
+            mem.lastAccessedTimestamp = fetchTime;
+            return mem
+        })
     }
 
     getAllMemories(memoryType?: MemoryType): MemoryV2[] {

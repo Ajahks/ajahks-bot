@@ -72,11 +72,12 @@ export class OllamaChatBot {
             `  {${formattedDate}} ${message.userName}: ${message.message}`
         console.log(chatMessage)
 
-        channel.sendTyping()
+        const interval = setInterval(() => channel.sendTyping(), 1000);
         const chatResponse = await this.ollamaInstance.chat({
             model: 'qwen3:32b',
             messages: [{ role: 'user', content: chatMessage }],
         });
+        clearInterval(interval)
         const responseMessage: ChatMessage = {
             userId: AI_NAME,
             userName: AI_NAME,
@@ -86,7 +87,7 @@ export class OllamaChatBot {
         this.memoryStream.addMemory(newMemory);
         this.memoryStream.saveToDisk()
 
-        this.pushMemoryToReflectionGeneratorAndGenerateIfAboveThreshold(newMemory, 15)
+        this.pushMemoryToReflectionGeneratorAndGenerateIfAboveThreshold(newMemory, 10)
 
         return responseMessage
     }
@@ -111,15 +112,19 @@ export class OllamaChatBot {
         const numMemories = this.reflectionGenerator.pushMemory(memory)
         if (numMemories < thresholdToPerformReflection) return
 
+        console.log("Reflection threshold reached, generating reflections!");
         // reflect and add to memories
         this.reflectionGenerator.reflectOnQueuedMemories().then(reflectionMemories => {
-            console.log("Reflection threshold reached, generating reflections!");
             reflectionMemories.forEach(reflectionMemory => {
                 console.log(`Adding Reflection to memory: ${reflectionMemory.getMemoryDescription()}`)
                 this.memoryStream.addMemory(reflectionMemory);
             })
             this.memoryStream.saveToDisk();
         })
+    }
+
+    private setTyping(channel: AnyChannel) {
+        channel.sendTyping()
     }
 
     private async generateContext(message: ChatMessage, chatMemories: EmbeddedMemory[]) {

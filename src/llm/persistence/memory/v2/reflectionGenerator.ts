@@ -31,6 +31,7 @@ export class ReflectionGenerator {
 
     async reflectOnQueuedMemories(): Promise<MemoryV2[]> {
         const highLevelQuestions = await this.generateHighLevelQuestionsFromMemoryList(3);
+        console.log(`===Generated high-level questions size: ${highLevelQuestions.length}`)
         const newReflections = highLevelQuestions.map(async (question) => {
             const relevantMemories = await this.findRelevantMemoriesForQuestion(question);
             const filteredMemories = relevantMemories.filter(memory => memory.memoryType != MemoryType.SEED)
@@ -55,8 +56,8 @@ export class ReflectionGenerator {
         
         No whitespace or newlines before the first =QUESTION=.
         An example formatted response would be:
-        =Question= How does person A study dinosaurs? 
-        =Question= Why does person B dislike person A's studies? 
+        =QUESTION= How does person A study dinosaurs? 
+        =QUESTION= Why does person B dislike person A's studies? 
         `
         const chatResponse = await this.ollamaInstance.chat({
             model: 'qwen3:32b',
@@ -72,7 +73,7 @@ export class ReflectionGenerator {
     private async findRelevantMemoriesForQuestion(question: string): Promise<MemoryV2[]> {
         const questionEmbedding = (await this.embedder.embedChunk(question)).embedding;
         const tempMemory = MemoryV2.newMemory(MemoryType.REFLECTION, question, questionEmbedding, [], 0);
-        return this.memoryStream.retrieveRelevantMemories(tempMemory, 20, new Date());
+        return this.memoryStream.retrieveRelevantMemories(tempMemory, 23, new Date(), 40);
     }
 
     private async generateReflectionsOnMemories(topicQuestion: string, memories: MemoryV2[], numReflections: number): Promise<MemoryV2[]> {
