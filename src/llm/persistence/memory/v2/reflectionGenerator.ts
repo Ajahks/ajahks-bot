@@ -31,7 +31,6 @@ export class ReflectionGenerator {
 
     async reflectOnQueuedMemories(): Promise<MemoryV2[]> {
         const highLevelQuestions = await this.generateHighLevelQuestionsFromMemoryList(3);
-        console.log(`===Generated high-level questions size: ${highLevelQuestions.length}`)
         const newReflections = highLevelQuestions.map(async (question) => {
             const relevantMemories = await this.findRelevantMemoriesForQuestion(question);
             const filteredMemories = relevantMemories.filter(memory => memory.memoryType != MemoryType.SEED)
