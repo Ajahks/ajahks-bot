@@ -72,15 +72,15 @@ export class ReflectionGenerator {
     private async findRelevantMemoriesForQuestion(question: string): Promise<MemoryV2[]> {
         const questionEmbedding = (await this.embedder.embedChunk(question)).embedding;
         const tempMemory = MemoryV2.newMemory(MemoryType.REFLECTION, question, questionEmbedding, [], 0);
-        return this.memoryStream.retrieveRelevantMemories(tempMemory, 23, new Date(), 40);
+        return this.memoryStream.retrieveRelevantMemories(tempMemory, 22, new Date(), 20);
     }
 
     private async generateReflectionsOnMemories(topicQuestion: string, memories: MemoryV2[], numReflections: number): Promise<MemoryV2[]> {
         const memoriesString = memories.map((memory, index) => `${index}: ${memory.getMemoryDescription()}`).join("\n");
-        const chatMessage = `Statements relating to ${topicQuestion}:
+        const chatMessage = `Statements relating to question ${topicQuestion}:
             ${memoriesString} 
             
-            What ${numReflections} high-level, standalone, insights can you infer from the above statements?
+            What ${numReflections} high-level, standalone, insights can you infer from the above statements, that may answer the original question?
             Please format response like so:
             =REFLECTION= [your first reflection here] =REF= [list of indexes of referenced memories for the insight]
             
