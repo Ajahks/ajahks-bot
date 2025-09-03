@@ -4,6 +4,19 @@ export enum MemoryType {
     SEED,
 }
 
+export function getMemoryTypeName(memoryType: MemoryType): string {
+    switch (memoryType) {
+        case MemoryType.OBSERVATION:
+            return "OBSERVATION";
+        case MemoryType.REFLECTION:
+            return "REFLECTION";
+        case MemoryType.SEED:
+            return "SEED MEMORY";
+        default:
+            return "UNKNOWN";
+    }
+}
+
 // JSON friendly representation of the memory that can be deserialized into a MemoryV2 object
 export interface MemoryV2Data {
     id: string;
@@ -52,6 +65,11 @@ export class MemoryV2 {
      */
     getMemoryDescription() {
         return this.description;
+    }
+
+    getMemoryDescriptionWithFormattedDate() {
+        const formattedDate = this.createTimestamp.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit"});
+        return `{${formattedDate}} => {${this.getMemoryDescription()}}`;
     }
 
     setLastAccessedTimestamp(date?: Date): Date {

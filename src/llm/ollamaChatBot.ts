@@ -13,7 +13,7 @@ import {EmbeddedMemory} from "./persistence/memory/v1/memory";
 import {splitReasoningResponse} from "./reasoningModelResponseUtils";
 import {MemoryStream} from "./persistence/memory/v2/memoryStream";
 import {ImportanceRater} from "./persistence/memory/v2/importanceRater";
-import {MemoryType, MemoryV2} from "./persistence/memory/v2/memoryV2";
+import {getMemoryTypeName, MemoryType, MemoryV2} from "./persistence/memory/v2/memoryV2";
 import {ReflectionGenerator} from "./persistence/memory/v2/reflectionGenerator";
 import {
     DMChannel,
@@ -21,6 +21,7 @@ import {
     PartialDMChannel, PrivateThreadChannel, PublicThreadChannel,
     StageChannel, TextChannel, VoiceChannel
 } from "discord.js";
+import {ShortTermMemory} from "./persistence/memory/v2/shortTermMemory";
 
 // Main alias
 export type AnyChannel =
@@ -41,9 +42,10 @@ export class OllamaChatBot {
     private dotaKnowledgeDb: VectorDB;
     private chatKnowledgeBase: ChatMessageKnowledgeBase;
     private memoryStream: MemoryStream;
+    private shortTermMemory: ShortTermMemory;
     private reflectionGenerator: ReflectionGenerator;
 
-     constructor(instance: Ollama, embedder: OllamaEmbedder, summarizer: OllamaSummarizer, importanceRater: ImportanceRater, vectorDb: VectorDB, memoryStream: MemoryStream, reflectionGenerator: ReflectionGenerator) {
+     constructor(instance: Ollama, embedder: OllamaEmbedder, summarizer: OllamaSummarizer, importanceRater: ImportanceRater, vectorDb: VectorDB, memoryStream: MemoryStream, shortTermMemory: ShortTermMemory, reflectionGenerator: ReflectionGenerator) {
         this.ollamaInstance = instance;
         this.embedder = embedder;
         this.summarizer = summarizer;
@@ -51,22 +53,24 @@ export class OllamaChatBot {
         this.dotaKnowledgeDb = vectorDb;
         this.chatKnowledgeBase = new ChatMessageKnowledgeBase(summarizer, embedder);
         this.memoryStream = memoryStream;
+        this.shortTermMemory = shortTermMemory;
         this.reflectionGenerator = reflectionGenerator;
     }
 
     async chat(message: ChatMessage, channel: AnyChannel) {
         const newMemory = await this.generateMemoryFromChatMessage(message);
 
-        const relevantMemories = this.memoryStream.retrieveRelevantMemories(newMemory, 20, new Date(message.timestamp), 30);
+        const relevantMemories = this.memoryStream.retrieveRelevantMemories(newMemory, 17.5, new Date(message.timestamp), 25);
         const relevantMemoriesString = relevantMemories.map(memory => {
-            const formattedMemoryDate = new Date(memory.createTimestamp).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit"});
-            return `    - {${formattedMemoryDate}} {` + memory.getMemoryDescription() + "}"
+            return `    - (${getMemoryTypeName(memory.memoryType)}) ${memory.getMemoryDescriptionWithFormattedDate()}`
         }).join("\n");
 
         const formattedDate = new Date(message.timestamp).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit"});
         const chatMessage: string =
             INSTRUCTION_CONTEXT + "\n" +
-            "[Relevant memories (only reference these as you see fit)]:\n" +
+            `[Last ${this.shortTermMemory.size} observations (only reference these if they are relevant to the messsage to reply to)]:\n` +
+            this.shortTermMemory.getShortTermMemoriesFormatedString() + "\n\n" +
+            "[Relevant long term memories (only reference these as you see fit)]:\n" +
             relevantMemoriesString + "\n\n" +
             "[Message to respond to (Reply directly to this only)]: \n" +
             `  {${formattedDate}} ${message.userName}: ${message.message}`
@@ -84,10 +88,14 @@ export class OllamaChatBot {
             message: splitReasoningResponse(chatResponse.message.content).message,
             timestamp: new Date().toString()
         }
-        this.memoryStream.addMemory(newMemory);
-        this.memoryStream.saveToDisk()
 
-        this.pushMemoryToReflectionGeneratorAndGenerateIfAboveThreshold(newMemory, 10)
+        const evictedMemory = this.shortTermMemory.pushWithinBounds(newMemory);
+        if (evictedMemory != null) {
+            this.memoryStream.addMemory(evictedMemory);
+            this.memoryStream.saveToDisk()
+        }
+
+        this.pushMemoryToReflectionGeneratorAndGenerateIfAboveThreshold(newMemory, 15)
 
         return responseMessage
     }

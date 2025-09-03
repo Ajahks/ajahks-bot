@@ -24,7 +24,7 @@ export class ImportanceRater {
     }
 
     public async rateImportance(memoryDescription: string): Promise<number> {
-        const prompt = "On a scale of 1 to 10, where 1 is purely mundane (e.g AJ went to bed, Alyssa pet her cat) and 10 is extremely poignant (e.g. a break up, a career change), rate the likely poignancy of the following piece of memory (Please just provide a 0-10 integer as your response):\n"
+        const prompt = "On a scale of 1 to 10, where 1 is purely mundane (e.g AJ went to bed, Alyssa pet her cat) and 10 is extremely poignant (e.g. a break up, a career change) that you absolutely must remember, rate the likely poignancy of the following piece of memory (Please just provide a 0-10 integer as your response):\n"
             + `["${memoryDescription}"]\n`
 
         const response = await this.ollama.chat({

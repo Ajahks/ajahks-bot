@@ -72,7 +72,7 @@ export class ReflectionGenerator {
     private async findRelevantMemoriesForQuestion(question: string): Promise<MemoryV2[]> {
         const questionEmbedding = (await this.embedder.embedChunk(question)).embedding;
         const tempMemory = MemoryV2.newMemory(MemoryType.REFLECTION, question, questionEmbedding, [], 0);
-        return this.memoryStream.retrieveRelevantMemories(tempMemory, 22, new Date(), 20);
+        return this.memoryStream.retrieveRelevantMemories(tempMemory, 17.5, new Date(), 20);
     }
 
     private async generateReflectionsOnMemories(topicQuestion: string, memories: MemoryV2[], numReflections: number): Promise<MemoryV2[]> {

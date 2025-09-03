@@ -9,6 +9,7 @@ import {OllamaSummarizer} from "./llm/rag/summarizer/ollamaSummarizer";
 import {ImportanceRater} from "./llm/persistence/memory/v2/importanceRater";
 import {MemoryStream} from "./llm/persistence/memory/v2/memoryStream";
 import {ReflectionGenerator} from "./llm/persistence/memory/v2/reflectionGenerator";
+import {ShortTermMemory} from "./llm/persistence/memory/v2/shortTermMemory";
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
@@ -23,8 +24,18 @@ const summarizer = new OllamaSummarizer(ollamaInstance.instance);
 const importanceRater = ImportanceRater.init(ollamaInstance.instance);
 const vectorDb = new VectorDB("./data/vectordb.json");
 const memoryStream = new MemoryStream("./data/memoryV2Stream.json");
+const shortTermMemory = new ShortTermMemory(4, "./data/shortTermMemory.json");
 const reflectionGenerator = new ReflectionGenerator(ollamaInstance.instance, memoryStream, embedder, importanceRater);
-const chatBot = new OllamaChatBot(ollamaInstance.instance, embedder, summarizer, importanceRater, vectorDb, memoryStream, reflectionGenerator);
+const chatBot = new OllamaChatBot(
+    ollamaInstance.instance,
+    embedder,
+    summarizer,
+    importanceRater,
+    vectorDb,
+    memoryStream,
+    shortTermMemory,
+    reflectionGenerator
+);
 ImportanceRater.init(ollamaInstance.instance)
 
 vectorDb.readDbFromDisk();
