@@ -24,7 +24,7 @@ const summarizer = new OllamaSummarizer(ollamaInstance.instance);
 const importanceRater = ImportanceRater.init(ollamaInstance.instance);
 const vectorDb = new VectorDB("./data/vectordb.json");
 const memoryStream = new MemoryStream("./data/memoryV2Stream.json");
-const shortTermMemory = new ShortTermMemory(4, "./data/shortTermMemory.json");
+const shortTermMemory = new ShortTermMemory(6, "./data/shortTermMemory.json");
 const reflectionGenerator = new ReflectionGenerator(ollamaInstance.instance, memoryStream, embedder, importanceRater);
 const chatBot = new OllamaChatBot(
     ollamaInstance.instance,

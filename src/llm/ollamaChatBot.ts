@@ -18,8 +18,12 @@ import {ReflectionGenerator} from "./persistence/memory/v2/reflectionGenerator";
 import {
     DMChannel,
     NewsChannel,
-    PartialDMChannel, PrivateThreadChannel, PublicThreadChannel,
-    StageChannel, TextChannel, VoiceChannel
+    PartialDMChannel,
+    PrivateThreadChannel,
+    PublicThreadChannel,
+    StageChannel,
+    TextChannel,
+    VoiceChannel
 } from "discord.js";
 import {ShortTermMemory} from "./persistence/memory/v2/shortTermMemory";
 
@@ -58,7 +62,7 @@ export class OllamaChatBot {
     }
 
     async chat(message: ChatMessage, channel: AnyChannel) {
-        const newMemory = await this.generateMemoryFromChatMessage(message);
+        const newMemory = await this.generateMemoryFromChatMessage(message, MemoryType.OBSERVATION);
 
         const relevantMemories = this.memoryStream.retrieveRelevantMemories(newMemory, 17.5, new Date(message.timestamp), 25);
         const relevantMemoriesString = relevantMemories.map(memory => {
@@ -89,18 +93,17 @@ export class OllamaChatBot {
             timestamp: new Date().toString()
         }
 
-        const evictedMemory = this.shortTermMemory.pushWithinBounds(newMemory);
-        if (evictedMemory != null) {
-            this.memoryStream.addMemory(evictedMemory);
-            this.memoryStream.saveToDisk()
-        }
-
+        this.pushMemory(newMemory).then (() => {
+            this.generateMemoryFromChatMessage(responseMessage, MemoryType.BOT_MESSAGE).then (botMessageMemory => {
+                this.pushMemory(botMessageMemory)
+            });
+        })
         this.pushMemoryToReflectionGeneratorAndGenerateIfAboveThreshold(newMemory, 15)
 
         return responseMessage
     }
 
-    private async generateMemoryFromChatMessage(message: ChatMessage): Promise<MemoryV2> {
+    private async generateMemoryFromChatMessage(message: ChatMessage, memoryType: MemoryType): Promise<MemoryV2> {
         const userMessage = `Author:${message.userName}\nMessage: ${message.message}`;
         const messageSummary = await this.summarizer.summarizeMessage(userMessage);
         console.log(`Summarized message: ${messageSummary}`)
@@ -108,7 +111,7 @@ export class OllamaChatBot {
         const memoryImportance = await this.importanceRater.rateImportance(messageSummary);
         console.log(`Assigned importance: ${memoryImportance}`)
         return MemoryV2.newMemory(
-            MemoryType.OBSERVATION,
+            memoryType,
             messageSummary,
             messageSummaryEmbedding.embedding,
             [],
@@ -129,6 +132,14 @@ export class OllamaChatBot {
             })
             this.memoryStream.saveToDisk();
         })
+    }
+
+    private async pushMemory(memory: MemoryV2) {
+        const evictedMemory = this.shortTermMemory.pushWithinBounds(memory);
+        if (evictedMemory != null) {
+            this.memoryStream.addMemory(evictedMemory);
+            this.memoryStream.saveToDisk()
+        }
     }
 
     private setTyping(channel: AnyChannel) {

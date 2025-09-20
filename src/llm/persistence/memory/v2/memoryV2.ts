@@ -2,6 +2,7 @@ export enum MemoryType {
     OBSERVATION,
     REFLECTION,
     SEED,
+    BOT_MESSAGE,
 }
 
 export function getMemoryTypeName(memoryType: MemoryType): string {
@@ -12,6 +13,8 @@ export function getMemoryTypeName(memoryType: MemoryType): string {
             return "REFLECTION";
         case MemoryType.SEED:
             return "SEED MEMORY";
+        case MemoryType.BOT_MESSAGE:
+            return "BOT (YOUR) MESSAGE";
         default:
             return "UNKNOWN";
     }
