@@ -72,10 +72,10 @@ export class OllamaChatBot {
         const formattedDate = new Date(message.timestamp).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit"});
         const chatMessage: string =
             INSTRUCTION_CONTEXT + "\n" +
-            `[Last ${this.shortTermMemory.size} observations (only reference these if they are relevant to the messsage to reply to)]:\n` +
-            this.shortTermMemory.getShortTermMemoriesFormatedString() + "\n\n" +
             "[Relevant long term memories (only reference these as you see fit)]:\n" +
             relevantMemoriesString + "\n\n" +
+            `[Last ${this.shortTermMemory.size} message summaries (only reference these if they are relevant to the messsage to reply to, and try not to repeat yourself unless necessary)]:\n` +
+            this.shortTermMemory.getShortTermMemoriesFormatedString() + "\n\n" +
             "[Message to respond to (Reply directly to this only)]: \n" +
             `  {${formattedDate}} ${message.userName}: ${message.message}`
         console.log(chatMessage)
@@ -95,7 +95,7 @@ export class OllamaChatBot {
 
         this.pushMemory(newMemory).then (() => {
             this.generateMemoryFromChatMessage(responseMessage, MemoryType.BOT_MESSAGE).then (botMessageMemory => {
-                this.pushMemory(botMessageMemory)
+                this.pushMemory(botMessageMemory, true)
             });
         })
         this.pushMemoryToReflectionGeneratorAndGenerateIfAboveThreshold(newMemory, 15)
@@ -134,9 +134,9 @@ export class OllamaChatBot {
         })
     }
 
-    private async pushMemory(memory: MemoryV2) {
+    private async pushMemory(memory: MemoryV2, shortTermOnly: boolean = false) {
         const evictedMemory = this.shortTermMemory.pushWithinBounds(memory);
-        if (evictedMemory != null) {
+        if (evictedMemory != null && !shortTermOnly) {
             this.memoryStream.addMemory(evictedMemory);
             this.memoryStream.saveToDisk()
         }
