@@ -21,6 +21,12 @@ seedMemories.forEach((seedMemory) => {
     memoryStream.removeMemory(seedMemory.id)
 })
 
+// Uncomment if need to purge bot memories
+// const botMemories = memoryStream.getAllMemories(MemoryType.BOT_MESSAGE)
+// botMemories.forEach((botMemory) => {
+//     memoryStream.removeMemory(botMemory.id)
+// })
+
 SEED_MEMORIES.forEach( async (seedMemory) => {
     await embedder.embedChunk(seedMemory).then(response => {
         const embedding = response.embedding

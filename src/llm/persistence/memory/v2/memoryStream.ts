@@ -1,10 +1,10 @@
 import {MemoryType, MemoryV2, MemoryV2Data} from "./memoryV2";
 import fs from "fs";
 
-const RECENCY_WEIGHT = 1.0;
-const IMPORTANCE_WEIGHT = 1.0;
-const RELEVANCE_WEIGHT = 1.0;
-const RECENCY_DECAY_FACTOR = 0.990; // How quickly the score decays as time difference goes on. Lower number means faster decay.
+const RECENCY_WEIGHT = 0.75;
+const IMPORTANCE_WEIGHT = 0.85;
+const RELEVANCE_WEIGHT = 1.4;
+const RECENCY_DECAY_FACTOR = 0.995; // How quickly the score decays as time difference goes on. Lower number means faster decay.
 const RECENCY_PERIOD = 1000 * 60 * 60; // Period of 1 hour.  Higher period means less score decay for older memories.
 const MAX_CATEGORY_SCORE = 10;
 
