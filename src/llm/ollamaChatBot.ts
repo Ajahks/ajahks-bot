@@ -42,7 +42,7 @@ export class OllamaChatBot {
     private ollamaInstance: Ollama;
     private embedder: OllamaEmbedder;
     private summarizer: OllamaSummarizer;
-    importanceRater: ImportanceRater;
+    private importanceRater: ImportanceRater;
     private dotaKnowledgeDb: VectorDB;
     private chatKnowledgeBase: ChatMessageKnowledgeBase;
     private memoryStream: MemoryStream;
