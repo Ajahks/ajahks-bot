@@ -33,6 +33,12 @@ export class ShortTermMemory {
         }).join("\n");
     }
 
+    getShortTermMemoriesFormatedStrings(): string[] {
+        return this.memory.map((memory) => {
+            return `(${getMemoryTypeName(memory.memoryType)}) ${memory.getMemoryDescriptionWithFormattedDate()}`
+        });
+    }
+
     saveMemoryToDisk() {
         const jsonMemoryDb: MemoryV2Data[] = this.memory.map((memory) => {
             return memory.toJson()

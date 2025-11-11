@@ -20,6 +20,7 @@ const seedMemories = memoryStream.getAllMemories(MemoryType.SEED)
 seedMemories.forEach((seedMemory) => {
     memoryStream.removeMemory(seedMemory.id)
 })
+memoryStream.saveToDisk();
 
 // Uncomment if need to purge bot memories
 // const botMemories = memoryStream.getAllMemories(MemoryType.BOT_MESSAGE)
@@ -27,14 +28,15 @@ seedMemories.forEach((seedMemory) => {
 //     memoryStream.removeMemory(botMemory.id)
 // })
 
-SEED_MEMORIES.forEach( async (seedMemory) => {
-    await embedder.embedChunk(seedMemory).then(response => {
-        const embedding = response.embedding
-        const memoryImportance = 20;
-        const memory = MemoryV2.newMemory(MemoryType.SEED, seedMemory, embedding, [], memoryImportance);
-
-        console.log(`Seeding memory: ${seedMemory}`)
-        memoryStream.addMemory(memory);
-        memoryStream.saveToDisk();
-    });
-});
+// No longer adding seed memories to the stream, instead these will be used for the characterAgent directly
+// SEED_MEMORIES.forEach( async (seedMemory) => {
+//     await embedder.embedChunk(seedMemory).then(response => {
+//         const embedding = response.embedding
+//         const memoryImportance = 20;
+//         const memory = MemoryV2.newMemory(MemoryType.SEED, seedMemory, embedding, [], memoryImportance);
+//
+//         console.log(`Seeding memory: ${seedMemory}`)
+//         memoryStream.addMemory(memory);
+//         memoryStream.saveToDisk();
+//     });
+// });

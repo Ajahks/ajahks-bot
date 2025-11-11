@@ -10,6 +10,7 @@ import {ImportanceRater} from "./llm/persistence/memory/v2/importanceRater";
 import {MemoryStream} from "./llm/persistence/memory/v2/memoryStream";
 import {ReflectionGenerator} from "./llm/persistence/memory/v2/reflectionGenerator";
 import {ShortTermMemory} from "./llm/persistence/memory/v2/shortTermMemory";
+import {AgentOrchestrator} from "./agent/agentOrchestrator";
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
@@ -36,6 +37,16 @@ const chatBot = new OllamaChatBot(
     shortTermMemory,
     reflectionGenerator
 );
+const multiAgentChatBot = new AgentOrchestrator(
+    ollamaInstance.instance,
+    embedder,
+    summarizer,
+    importanceRater,
+    vectorDb,
+    memoryStream,
+    shortTermMemory,
+    reflectionGenerator
+);
 ImportanceRater.init(ollamaInstance.instance)
 
 vectorDb.readDbFromDisk();
@@ -53,7 +64,7 @@ client.on(Events.MessageCreate, async (message) => {
             timestamp: message.createdAt.toISOString()
         }
 
-        chatBot.chat(receivedMessage, message.channel).then(response => {
+        multiAgentChatBot.chat(receivedMessage, message.channel).then(response => {
             if (response != null) {
                 message.channel.send(response.message)
             }

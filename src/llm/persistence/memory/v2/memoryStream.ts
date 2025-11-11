@@ -61,14 +61,34 @@ export class MemoryStream {
         const scoredMemories = Array.from(this.memoryDb.values()).map((memory) => {
             return {
                 memory: memory,
-                score: this.calculateScoreForMemory(memory, queriedMemory, fetchTime)
+                score: this.calculateScoreForMemory(memory, queriedMemory.embedding, fetchTime)
             }
         })
+        return this.filterAndSortScoredMemories(scoredMemories, minScore, maxNumResults, fetchTime);
+    }
 
+    queryRelevantMemories(queryEmbedding: number[], minScore: number, fetchTime: Date, maxNumResults?: number): MemoryV2[] {
+        const scoredMemories = Array.from(this.memoryDb.values()).map((memory) => {
+            return {
+                memory: memory,
+                score: this.calculateScoreForMemory(memory, queryEmbedding, fetchTime)
+            }
+        })
+        return this.filterAndSortScoredMemories(scoredMemories, minScore, maxNumResults, fetchTime);
+    }
+
+    private filterAndSortScoredMemories(scoredMemories: {
+        memory: MemoryV2;
+        score: MemoryScores
+    }[], minScore: number, maxNumResults: number | undefined, fetchTime: Date) {
         const sortedScoredMemories = scoredMemories.sort((a, b) => b.score.totalScore - a.score.totalScore);
         const filteredMemories = sortedScoredMemories
-            .filter((scoredMemory) => {return scoredMemory.score.totalScore >= minScore})
-            .map((scoredMemory) => {return scoredMemory.memory})
+            .filter((scoredMemory) => {
+                return scoredMemory.score.totalScore >= minScore
+            })
+            .map((scoredMemory) => {
+                return scoredMemory.memory
+            })
         if (maxNumResults !== undefined) {
             return filteredMemories.slice(0, maxNumResults).map(mem => {
                 mem.lastAccessedTimestamp = fetchTime;
@@ -95,10 +115,10 @@ export class MemoryStream {
         this.memoryDb.delete(memoryId)
     }
 
-    private calculateScoreForMemory(memory: MemoryV2, queriedMemory: MemoryV2, fetchTime: Date): MemoryScores {
+    private calculateScoreForMemory(memory: MemoryV2, queryEmbedding: number[], fetchTime: Date): MemoryScores {
         const recencyScore = RECENCY_WEIGHT * this.calculateRecencyScore(memory, fetchTime);
         const importanceScore = IMPORTANCE_WEIGHT * this.calculateImportanceScore(memory);
-        const relevanceScore = RELEVANCE_WEIGHT * this.calculateRelevanceScore(queriedMemory.embedding, memory);
+        const relevanceScore = RELEVANCE_WEIGHT * this.calculateRelevanceScore(queryEmbedding, memory);
         return {
             recencyScore: recencyScore,
             importanceScore: importanceScore,
