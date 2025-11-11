@@ -89,10 +89,10 @@ test("retrieveRelevantMemories filters by minScore and sorts by score descending
     memoryStream.addMemory(memB);
     memoryStream.addMemory(memC);
 
-    // With new weights: RECENCY_WEIGHT=0.75, IMPORTANCE_WEIGHT=0.85, RELEVANCE_WEIGHT=1.4
-    // Recency=10 for all; totals: A=(10*0.75) + (0*0.85) + (10*1.4) = 7.5 + 0 + 14 = 21.5
-    //                    B=(10*0.75) + (0*0.85) + (5*1.4) = 7.5 + 0 + 7 = 14.5
-    //                    C=(10*0.75) + (0*0.85) + (0*1.4) = 7.5 + 0 + 0 = 7.5
+    // With new weights: RECENCY_WEIGHT=0.65, IMPORTANCE_WEIGHT=0.75, RELEVANCE_WEIGHT=1.6
+    // Recency=10 for all; totals: A=(10*0.65) + (0*0.75) + (10*1.6) = 6.5 + 0 + 16 = 22.5
+    //                    B=(10*0.65) + (0*0.75) + (5*1.6) = 6.5 + 0 + 8 = 14.5
+    //                    C=(10*0.65) + (0*0.75) + (0*1.6) = 6.5 + 0 + 0 = 6.5
     const result = memoryStream.retrieveRelevantMemories(queried, 13, fetchTime);
 
     expect(result.length).toBe(2);
@@ -137,10 +137,10 @@ test("retrieveRelevantMemories returns empty when minScore is above all totals",
     mem.setLastAccessedTimestamp(fetchTime);
     memoryStream.addMemory(mem);
 
-    // With new weights: RECENCY_WEIGHT=0.75, IMPORTANCE_WEIGHT=0.85, RELEVANCE_WEIGHT=1.4
-    // Total score = (10*0.75) + (0*0.85) + (5*1.4) = 7.5 + 0 + 7 = 14.5
-    // So minScore of 29 would be above all totals
-    const result = memoryStream.retrieveRelevantMemories(queried, 29, fetchTime);
+    // With new weights: RECENCY_WEIGHT=0.65, IMPORTANCE_WEIGHT=0.75, RELEVANCE_WEIGHT=1.6
+    // Total score = (10*0.65) + (0*0.75) + (5*1.6) = 6.5 + 0 + 8 = 14.5
+    // So minScore of 15 would be above all totals
+    const result = memoryStream.retrieveRelevantMemories(queried, 15, fetchTime);
     expect(result.length).toBe(0);
 });
 
@@ -246,10 +246,10 @@ test("retrieveRelevantMemories respects maxNumResults limit", () => {
     memoryStream.addMemory(memB);
     memoryStream.addMemory(memC);
 
-    // With new weights: RECENCY_WEIGHT=0.75, IMPORTANCE_WEIGHT=0.85, RELEVANCE_WEIGHT=1.4
-    // Totals: A ~ (10*0.75) + (0*0.85) + (10*1.4) = 7.5 + 0 + 14 = 21.5
-    //         B ~ (10*0.75) + (0*0.85) + (5*1.4) = 7.5 + 0 + 7 = 14.5
-    //         C ~ (10*0.75) + (0*0.85) + (0*1.4) = 7.5 + 0 + 0 = 7.5
+    // With new weights: RECENCY_WEIGHT=0.65, IMPORTANCE_WEIGHT=0.75, RELEVANCE_WEIGHT=1.6
+    // Totals: A ~ (10*0.65) + (0*0.75) + (10*1.6) = 6.5 + 0 + 16 = 22.5
+    //         B ~ (10*0.65) + (0*0.75) + (5*1.6) = 6.5 + 0 + 8 = 14.5
+    //         C ~ (10*0.65) + (0*0.75) + (0*1.6) = 6.5 + 0 + 0 = 6.5
     const result = memoryStream.retrieveRelevantMemories(queried, 0, fetchTime, 2);
 
     expect(result.length).toBe(2);
