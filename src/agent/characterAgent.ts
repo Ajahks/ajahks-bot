@@ -29,7 +29,7 @@ export class CharacterAgent {
         ]
 
         const response =  await this.ollamaInstance.chat({
-            model: "qwen3:32b",
+            model: "deepseek-r1:32b",
             messages: messages,
             think: true,
         })
