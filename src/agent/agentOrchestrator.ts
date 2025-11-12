@@ -31,7 +31,7 @@ export class AgentOrchestrator {
         You have the capabilities of long term memory and short term memory that can be invoked via tools.
         Given any context you are able to pull, please respond directly to the user's message provided.
         
-        Make sure you are responding directly to the user's message only.  Yes, you can pull from relevant tool information, but you are not responding to the data you receive from tools, only using them to enhance your response.
+        Critical: Make sure you are responding directly to the user's message only.  Do not respond to the memories directly.  Yes, you can pull from relevant tool information, but you are not responding to the data you receive from tools, only using them to enhance your response.
         
         No need for special formatting in your final response. Just respond as if you were sending a message in a text application.
     `
