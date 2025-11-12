@@ -5,8 +5,6 @@ import {Message, Ollama} from "ollama";
 import {OllamaEmbedder} from "../llm/rag/ollamaEmbedder";
 import {OllamaSummarizer} from "../llm/rag/summarizer/ollamaSummarizer";
 import {ImportanceRater} from "../llm/persistence/memory/v2/importanceRater";
-import {VectorDB} from "../llm/rag/vectorDb";
-import {ChatMessageKnowledgeBase} from "../llm/persistence/memory/v1/chatMessageKnowledgeBase";
 import {MemoryStream} from "../llm/persistence/memory/v2/memoryStream";
 import {ShortTermMemory} from "../llm/persistence/memory/v2/shortTermMemory";
 import {ReflectionGenerator} from "../llm/persistence/memory/v2/reflectionGenerator";
@@ -20,8 +18,6 @@ export class AgentOrchestrator {
     private embedder: OllamaEmbedder;
     private summarizer: OllamaSummarizer;
     private importanceRater: ImportanceRater;
-    private dotaKnowledgeDb: VectorDB;
-    private chatKnowledgeBase: ChatMessageKnowledgeBase;
     private memoryStream: MemoryStream;
     private shortTermMemory: ShortTermMemory;
     private reflectionGenerator: ReflectionGenerator;
@@ -41,13 +37,11 @@ export class AgentOrchestrator {
     `
 
 
-    constructor(instance: Ollama, embedder: OllamaEmbedder, summarizer: OllamaSummarizer, importanceRater: ImportanceRater, vectorDb: VectorDB, memoryStream: MemoryStream, shortTermMemory: ShortTermMemory, reflectionGenerator: ReflectionGenerator) {
+    constructor(instance: Ollama, embedder: OllamaEmbedder, summarizer: OllamaSummarizer, importanceRater: ImportanceRater, memoryStream: MemoryStream, shortTermMemory: ShortTermMemory, reflectionGenerator: ReflectionGenerator) {
         this.ollamaInstance = instance;
         this.embedder = embedder;
         this.summarizer = summarizer;
         this.importanceRater = importanceRater;
-        this.dotaKnowledgeDb = vectorDb;
-        this.chatKnowledgeBase = new ChatMessageKnowledgeBase(summarizer, embedder);
         this.memoryStream = memoryStream;
         this.shortTermMemory = shortTermMemory;
         this.reflectionGenerator = reflectionGenerator;
