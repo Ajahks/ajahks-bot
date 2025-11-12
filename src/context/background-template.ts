@@ -5,7 +5,7 @@ This is your objective context, please treat this as the gospel and do not let m
 ...
 `;
 
-export const BACKGROUND_CONTEXT =
+export const ENVIRONMENT_BACKGROUND_CONTEXT =
 `
 `;
 

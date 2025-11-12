@@ -1,5 +1,4 @@
 import {ChatMessage} from "../llm/persistence/chat/chatMessage";
-import {AnyChannel} from "../llm/ollamaChatBot";
 import {getMemoryTypeName, MemoryType, MemoryV2} from "../llm/persistence/memory/v2/memoryV2";
 import {Message, Ollama} from "ollama";
 import {OllamaEmbedder} from "../llm/rag/ollamaEmbedder";
@@ -12,6 +11,7 @@ import {tools} from "./tools/tools";
 import {AI_NAME} from "../context/background";
 import {CharacterAgent} from "./characterAgent";
 import {splitReasoningResponse} from "../llm/reasoningModelResponseUtils";
+import {AnyChannel} from "../types/discord";
 
 export class AgentOrchestrator {
     private ollamaInstance: Ollama;
@@ -99,7 +99,7 @@ export class AgentOrchestrator {
                         const args = call.function.arguments as { queries: string[] };
                         const embeddings = (await this.embedder.embedChunks(args.queries)).embeddings;
                         const memories = await this.retrieveRelevantMemoriesForEmbeddings(embeddings);
-                        console.log(`Retrieved long term memories: ${memories}`);
+                        console.log(`Retrieved long term memories: ${JSON.stringify(memories)}`);
                         messages.push({
                             role: 'tool',
                             tool_name: call.function.name,
@@ -109,7 +109,7 @@ export class AgentOrchestrator {
                     }
                     case 'retrieve_short_term_memories': {
                         const shortTermMemoriesStrings = this.shortTermMemory.getShortTermMemoriesFormatedStrings();
-                        console.log(`Retrieved short term memories: ${shortTermMemoriesStrings}`);
+                        console.log(`Retrieved short term memories: ${JSON.stringify(shortTermMemoriesStrings)}`);
                         messages.push({
                             role: 'tool',
                             tool_name: call.function.name,

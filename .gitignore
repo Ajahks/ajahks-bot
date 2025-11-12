@@ -1,5 +1,4 @@
-config/discord/*
-config/groq/*
+config/discord/config.json
 dist/
 build/
 node_modules/

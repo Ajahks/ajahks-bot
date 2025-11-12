@@ -6,11 +6,6 @@ ajahks-bot is a discord character bot that levarages local LLM's using Ollama.
 npm run build
 ```
 
-## Initializing the Knowledge Base
-```
-npm run init-db
-```
-
 ## Initializing the Memory 
 ```
 npm run init-memory
