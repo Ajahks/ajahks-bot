@@ -4,7 +4,7 @@ import path from "path";
 import os from "os";
 import {MemoryType, MemoryV2} from "./memoryV2";
 
-const TEST_FILE_PATH = path.join(os.tmpdir(), "memory-stream-test.json");
+const TEST_FILE_PATH = path.join(os.tmpdir(), `memory-stream-test${process.pid}-${Date.now()}.json`);
 
 afterEach(async () => {
   try {

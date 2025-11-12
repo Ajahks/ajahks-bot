@@ -1,3 +1,6 @@
+# Ajahks Bot
+ajahks-bot is a discord character bot that levarages local LLM's using Ollama.
+
 ## Building the Bot
 ```
 npm run build

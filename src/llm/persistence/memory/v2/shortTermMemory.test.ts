@@ -7,7 +7,7 @@ import { ShortTermMemory } from './shortTermMemory';
 import { MemoryV2, MemoryType } from './memoryV2';
 
 describe('ShortTermMemory', () => {
-    const diskPath = path.join(os.tmpdir(), 'test-short-term-memory.json');
+    const diskPath = path.join(os.tmpdir(), `test-short-term-memory.json${process.pid}-${Date.now()}.json`);
 
     afterEach(async () => {
         try {
